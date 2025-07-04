@@ -560,6 +560,13 @@ app.delete('/api/admin/deletar-movimentacao', verificarToken, async (req, res) =
         // Deletar movimentação
         await run('DELETE FROM movimentacoes WHERE id = ?', [movimentacao_id]);
 
+        // Limpar cache relacionado para forçar atualização do dashboard
+        clearCache('dashboard');
+        clearCache('COUNT');
+        clearCache('SUM');
+        clearCache('movimentacoes');
+        clearCache('aihs');
+
         console.log(`✅ Movimentação ${movimentacao_id} da AIH ${movimentacao.numero_aih} deletada por ${req.usuario.nome}`);
 
         res.json({ 
@@ -645,6 +652,14 @@ app.delete('/api/admin/deletar-aih', verificarToken, async (req, res) => {
 
         await runTransaction(operations);
 
+        // Limpar cache relacionado para forçar atualização do dashboard
+        clearCache('dashboard');
+        clearCache('COUNT');
+        clearCache('SUM');
+        clearCache('movimentacoes');
+        clearCache('aihs');
+        clearCache('glosas');
+
         console.log(`✅ AIH ${numero_aih} completamente deletada por ${req.usuario.nome} - ${movimentacoes.length} movimentações, ${glosas.length} glosas, ${atendimentos.length} atendimentos`);
 
         res.json({ 
@@ -690,7 +705,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
         const aihsExcluidasCompetencia = aihsExcluidas.filter(a => a.competencia_excluida === competencia).map(a => a.aih_id).filter(id => id);
 
         // 1. AIH em processamento na competência 
-        // Lógica correta: AIHs onde número de entradas SUS > número de saídas para hospital
+        // Lógica correta: AIHs da competência onde número de entradas SUS > número de saídas para hospital
         let sqlEmProcessamentoCompetencia = `
             SELECT COUNT(DISTINCT a.id) as total
             FROM aihs a
@@ -699,11 +714,11 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
                 SELECT aih_id
                 FROM (
                     SELECT 
-                        aih_id,
-                        SUM(CASE WHEN tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
-                        SUM(CASE WHEN tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
-                    FROM movimentacoes
-                    GROUP BY aih_id
+                        m.aih_id,
+                        SUM(CASE WHEN m.tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
+                        SUM(CASE WHEN m.tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
+                    FROM movimentacoes m
+                    GROUP BY m.aih_id
                     HAVING entradas > saidas
                 ) AS em_processamento
             )
@@ -755,11 +770,11 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
                 SELECT aih_id
                 FROM (
                     SELECT 
-                        aih_id,
-                        SUM(CASE WHEN tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
-                        SUM(CASE WHEN tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
-                    FROM movimentacoes
-                    GROUP BY aih_id
+                        m.aih_id,
+                        SUM(CASE WHEN m.tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
+                        SUM(CASE WHEN m.tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
+                    FROM movimentacoes m
+                    GROUP BY m.aih_id
                     HAVING entradas > saidas
                 ) AS em_processamento_geral
             )
@@ -1348,11 +1363,11 @@ app.post('/api/pesquisar', verificarToken, async (req, res) => {
                     SELECT aih_id
                     FROM (
                         SELECT 
-                            aih_id,
-                            SUM(CASE WHEN tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
-                            SUM(CASE WHEN tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
-                        FROM movimentacoes
-                        GROUP BY aih_id
+                            m.aih_id,
+                            SUM(CASE WHEN m.tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
+                            SUM(CASE WHEN m.tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
+                        FROM movimentacoes m
+                        GROUP BY m.aih_id
                         HAVING entradas > saidas
                     ) AS em_processamento
                 )
@@ -1378,11 +1393,11 @@ app.post('/api/pesquisar', verificarToken, async (req, res) => {
                     SELECT aih_id
                     FROM (
                         SELECT 
-                            aih_id,
-                            SUM(CASE WHEN tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
-                            SUM(CASE WHEN tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
-                        FROM movimentacoes
-                        GROUP BY aih_id
+                            m.aih_id,
+                            SUM(CASE WHEN m.tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
+                            SUM(CASE WHEN m.tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
+                        FROM movimentacoes m
+                        GROUP BY m.aih_id
                         HAVING entradas > saidas
                     ) AS em_processamento_geral
                 )
@@ -2288,13 +2303,13 @@ app.post('/api/relatorios/:tipo', verificarToken, async (req, res) => {
                     SELECT COUNT(*) as total
                     FROM (
                         SELECT 
-                            aih_id,
-                            SUM(CASE WHEN tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
-                            SUM(CASE WHEN tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
+                            m.aih_id,
+                            SUM(CASE WHEN m.tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
+                            SUM(CASE WHEN m.tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
                         FROM movimentacoes m
                         JOIN aihs a ON m.aih_id = a.id
                         WHERE 1=1 ${filtroWhere.replace('competencia', 'm.competencia').replace('criado_em', 'm.data_movimentacao')}
-                        GROUP BY aih_id
+                        GROUP BY m.aih_id
                         HAVING entradas > saidas
                     ) AS processamento_real
                 `, params);

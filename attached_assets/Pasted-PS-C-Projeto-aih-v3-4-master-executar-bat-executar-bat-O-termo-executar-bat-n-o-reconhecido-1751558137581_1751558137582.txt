@@ -1,0 +1,69 @@
+PS C:\Projeto\aih-v3.4-master> executar.bat
+executar.bat : O termo 'executar.bat' não é reconhecido como nome de cmdlet, função, arquivo de script ou programa
+operável. Verifique a grafia do nome ou, se um caminho tiver sido incluído, veja se o caminho está correto e tente
+novamente.
+No linha:1 caractere:1
++ executar.bat
++ ~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (executar.bat:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+
+Suggestion [3,General]: O comando executar.bat não foi encontrado, mas existe no local atual. Por padrão, o Windows PowerShell não carrega comandos do local atual. Se você confia nesse comando, digite: ".\executar.bat". Consulte "get-help about_Command_Precedence" para obter mais detalhes.
+PS C:\Projeto\aih-v3.4-master> .\executar.bat
+'��═════════════════════════════════════╝' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'ckage.json" (' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'instalação' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'ROJECT_DIR"' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'2.' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'liberar...' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'sar' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'e' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'TEMA' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'/t' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'�═════════════════════════════════════════════════════════════' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'aída:' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+
+'cho' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'3.' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'ar' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+O comando AT foi preterido. Use schtasks.exe em seu lugar.
+
+Não há suporte para o pedido.
+'xecutar-testes.bat' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'contrados:' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'"ultimo_log=%i"' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'o_log' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'cho' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'e' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'ole' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'movendo' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'1' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'nstaladas' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+'ndo' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.

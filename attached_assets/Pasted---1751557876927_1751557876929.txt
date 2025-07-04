@@ -1,0 +1,48 @@
+ÔòöÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòù
+Ôòæ              CRIANDO ATALHO NA ├üREA DE TRABALHO                   Ôòæ
+ÔòÜÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòØ
+
+Ô£à Arquivo executar.bat encontrado em: C:\Projeto\aih-v3.4-master\executar.bat
+
+Ô£à ├ürea de trabalho encontrada: C:\Users\Gustavo Cambraia\OneDrive\Área de Trabalho
+
+­ƒöä Criando atalho na ├írea de trabalho...
+^ : O termo '^' não é reconhecido como nome de cmdlet, função, arquivo de script ou programa operável. Verifique a
+grafia do nome ou, se um caminho tiver sido incluído, veja se o caminho está correto e tente novamente.
+No linha:1 caractere:45
++ $ws = New-Object -ComObject WScript.Shell;  ^
++                                             ~
+    + CategoryInfo          : ObjectNotFound: (^:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+A sintaxe do nome do arquivo, do nome do diretório ou do rótulo do volume está incorreta.
+A sintaxe do nome do arquivo, do nome do diretório ou do rótulo do volume está incorreta.
+O sistema não pode encontrar o caminho especificado.
+'"$shortcut.Save()"' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+
+ÔØî ERRO: N├úo foi poss├¡vel criar o atalho!
+
+­ƒöº SOLU├ç├òES ALTERNATIVAS:
+
+OP├ç├âO 1 - Criar atalho manualmente:
+1. Clique com bot├úo direito na ├írea de trabalho
+2. Selecione "Novo" > "Atalho"
+3. Cole este caminho: C:\Projeto\aih-v3.4-master\executar.bat
+4. Clique "Avan├ºar"
+5. Nome: Sistema AIH
+6. Clique "Concluir"
+
+OP├ç├âO 2 - Arrastar e soltar:
+1. Abra a pasta: C:\Projeto\aih-v3.4-master
+2. Arraste o arquivo "executar.bat" para a ├írea de trabalho
+3. Escolha "Criar atalhos aqui"
+
+
+­ƒÄ» INFORMA├ç├òES DO SISTEMA:
+   ÔÇó Pasta do projeto: C:\Projeto\aih-v3.4-master
+   ÔÇó Arquivo principal: C:\Projeto\aih-v3.4-master\executar.bat
+   ÔÇó ├ürea de trabalho: C:\Users\Gustavo Cambraia\OneDrive\Área de Trabalho
+   ÔÇó Atalho criado: C:\Users\Gustavo Cambraia\OneDrive\Área de Trabalho\Sistema AIH.lnk
+
+Pressione qualquer tecla para continuar. . .

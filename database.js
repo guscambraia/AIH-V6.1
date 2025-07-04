@@ -17,22 +17,22 @@ class DatabasePool {
         this.connections = [];
         this.available = [];
         this.waiting = [];
-        
+
         // Criar pool inicial
         for (let i = 0; i < size; i++) {
             this.createConnection();
         }
-        
+
         console.log(`Pool de ${size} conexões criado`);
     }
-    
+
     createConnection() {
         const conn = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
             if (err) {
                 console.error('Erro ao criar conexão:', err);
                 return;
             }
-            
+
             // Configurações otimizadas para alto volume
             conn.serialize(() => {
                 conn.run("PRAGMA journal_mode = WAL");
@@ -50,12 +50,12 @@ class DatabasePool {
                 conn.run("PRAGMA optimize");
             });
         });
-        
+
         this.connections.push(conn);
         this.available.push(conn);
         return conn;
     }
-    
+
     async getConnection() {
         return new Promise((resolve, reject) => {
             if (this.available.length > 0) {
@@ -66,7 +66,7 @@ class DatabasePool {
             }
         });
     }
-    
+
     releaseConnection(conn) {
         this.available.push(conn);
         if (this.waiting.length > 0) {
@@ -75,7 +75,7 @@ class DatabasePool {
             waiter.resolve(nextConn);
         }
     }
-    
+
     async closeAll() {
         for (const conn of this.connections) {
             await new Promise((resolve) => conn.close(resolve));
@@ -176,7 +176,7 @@ const initDB = () => {
             FOREIGN KEY (aih_id) REFERENCES aihs(id),
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )`);
-        
+
         // Adicionar coluna observacoes se não existir (para bancos existentes)
         db.run(`ALTER TABLE movimentacoes ADD COLUMN observacoes TEXT`, (err) => {
             // Ignora erro se coluna já existe
@@ -252,111 +252,111 @@ const initDB = () => {
         db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_aih_numero ON aihs(numero_aih)`);
         db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_nome ON usuarios(nome)`);
         db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_matricula ON usuarios(matricula)`);
-        
+
         // Índices compostos para consultas frequentes
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_status_competencia ON aihs(status, competencia)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_competencia_criado ON aihs(competencia, criado_em DESC)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_status_valor ON aihs(status, valor_atual)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_usuario_criado ON aihs(usuario_cadastro_id, criado_em DESC)`);
-        
+
         // Índices para movimentações (consultas frequentes)
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_aih_data ON movimentacoes(aih_id, data_movimentacao DESC)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_tipo_competencia ON movimentacoes(tipo, competencia)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_competencia_data ON movimentacoes(competencia, data_movimentacao DESC)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_usuario_data ON movimentacoes(usuario_id, data_movimentacao DESC)`);
-        
+
         // Índices para glosas
         db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_aih_ativa ON glosas(aih_id, ativa)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_tipo_prof ON glosas(tipo, profissional)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_prof_ativa ON glosas(profissional, ativa, criado_em DESC)`);
-        
+
         // Índices para relatórios e consultas de auditoria
         db.run(`CREATE INDEX IF NOT EXISTS idx_atendimentos_numero ON atendimentos(numero_atendimento)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_logs_usuario_data ON logs_acesso(usuario_id, data_hora DESC)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_logs_acao_data ON logs_acesso(acao, data_hora DESC)`);
-        
+
         // Índices para logs de exclusão
         db.run(`CREATE INDEX IF NOT EXISTS idx_logs_exclusao_usuario ON logs_exclusao(usuario_id, data_exclusao DESC)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_logs_exclusao_tipo ON logs_exclusao(tipo_exclusao, data_exclusao DESC)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_logs_exclusao_data ON logs_exclusao(data_exclusao DESC)`);
-        
+
         // Índices específicos para dashboard e relatórios (performance crítica)
         db.run(`CREATE INDEX IF NOT EXISTS idx_dashboard_competencia_status ON aihs(competencia, status, valor_inicial, valor_atual)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_tipo_competencia_aih ON movimentacoes(tipo, competencia, aih_id)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_ativa_aih_tipo ON glosas(ativa, aih_id, tipo, profissional)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_criado_status ON aihs(criado_em DESC, status, competencia)`);
-        
+
         // Índice composto para consultas de fluxo
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_competencia_tipo_data ON movimentacoes(competencia, tipo, data_movimentacao DESC)`);
-        
+
         // Índices para texto (FTS seria ideal, mas usando LIKE otimizado)
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_medicina ON movimentacoes(prof_medicina) WHERE prof_medicina IS NOT NULL`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_enfermagem ON movimentacoes(prof_enfermagem) WHERE prof_enfermagem IS NOT NULL`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_fisio ON movimentacoes(prof_fisioterapia) WHERE prof_fisioterapia IS NOT NULL`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_buco ON movimentacoes(prof_bucomaxilo) WHERE prof_bucomaxilo IS NOT NULL`);
-        
+
         // Novos índices para otimização de consultas pesadas
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_numero_status ON aihs(numero_aih, status, competencia)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_valor_competencia ON aihs(valor_inicial, valor_atual, competencia)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_aih_usuario_data ON movimentacoes(aih_id, usuario_id, data_movimentacao DESC)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_criado_ativa ON glosas(criado_em DESC, ativa, profissional)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_atend_aih_numero ON atendimentos(aih_id, numero_atendimento)`);
-        
+
         // Índices para pesquisas por período
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_criado_competencia_valor ON aihs(criado_em, competencia, valor_inicial DESC)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_data_tipo_valor ON movimentacoes(data_movimentacao DESC, tipo, valor_conta)`);
-        
+
         // Índices para consultas de relatórios complexos
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_status_criado_valor ON aihs(status, criado_em DESC, valor_inicial, valor_atual)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_tipo_linha_ativa ON glosas(tipo, linha, ativa, criado_em DESC)`);
-        
+
         // Índice para otimizar JOINs frequentes
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_aih_tipo_status ON movimentacoes(aih_id, tipo, status_aih, data_movimentacao DESC)`);
-        
+
         // Índices funcionais avançados para otimizações específicas
-        
+
         // Índices para busca de texto (case-insensitive)
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_numero_upper ON aihs(UPPER(numero_aih))`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_atend_numero_upper ON atendimentos(UPPER(numero_atendimento))`);
-        
+
         // Índices para cálculos de glosas frequentes
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_calculo_glosa ON aihs(valor_inicial - valor_atual) WHERE (valor_inicial - valor_atual) > 0`);
-        
+
         // Índices para relatórios de período específico
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_mes_ano ON aihs(substr(competencia, 4, 4), substr(competencia, 1, 2))`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_mes_ano ON movimentacoes(strftime('%Y', data_movimentacao), strftime('%m', data_movimentacao))`);
-        
+
         // Índices parciais para status específicos (mais eficientes)
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_finalizadas ON aihs(criado_em DESC, valor_atual) WHERE status IN (1, 4)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_ativas ON aihs(criado_em DESC, status, competencia) WHERE status IN (2, 3)`);
-        
+
         // Índices para glosas ativas (mais usadas)
         db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_ativas_prof_tipo ON glosas(profissional, tipo, criado_em DESC) WHERE ativa = 1`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_ativas_aih_criado ON glosas(aih_id, criado_em DESC) WHERE ativa = 1`);
-        
+
         // Índices compostos otimizados para dashboard
         db.run(`CREATE INDEX IF NOT EXISTS idx_dashboard_status_comp_valor ON aihs(status, competencia, valor_inicial, valor_atual, criado_em DESC)`);
-        
+
         // Índices para consultas de auditoria por profissional
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_med_data ON movimentacoes(prof_medicina, data_movimentacao DESC) WHERE prof_medicina IS NOT NULL`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_enf_data ON movimentacoes(prof_enfermagem, data_movimentacao DESC) WHERE prof_enfermagem IS NOT NULL`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_fisio_data ON movimentacoes(prof_fisioterapia, data_movimentacao DESC) WHERE prof_fisioterapia IS NOT NULL`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_buco_data ON movimentacoes(prof_bucomaxilo, data_movimentacao DESC) WHERE prof_bucomaxilo IS NOT NULL`);
-        
+
         // Índices para relatórios de performance por competência
         db.run(`CREATE INDEX IF NOT EXISTS idx_competencia_performance ON aihs(competencia, status, valor_inicial, valor_atual)`);
-        
+
         // Índices para análise temporal
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_data_cadastro ON aihs(date(criado_em), competencia, status)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_mov_data_tipo_comp ON movimentacoes(date(data_movimentacao), tipo, competencia)`);
-        
+
         // Índices para logs de auditoria
         db.run(`CREATE INDEX IF NOT EXISTS idx_logs_usuario_mes ON logs_acesso(usuario_id, strftime('%Y-%m', data_hora))`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_logs_excl_mes ON logs_exclusao(strftime('%Y-%m', data_exclusao), tipo_exclusao)`);
-        
+
         // Índices para otimizar consultas de exportação
         db.run(`CREATE INDEX IF NOT EXISTS idx_export_completo ON aihs(criado_em DESC, numero_aih, status, competencia, valor_inicial, valor_atual)`);
-        
+
         console.log('Banco de dados inicializado com índices funcionais avançados');
     });
 };
@@ -377,7 +377,7 @@ const CACHE_CONFIG = {
 // Função de limpeza inteligente
 const clearExpiredCache = () => {
     const now = Date.now();
-    
+
     // Limpar cache principal
     for (const [key, value] of queryCache.entries()) {
         const config = getCacheConfig(key);
@@ -385,14 +385,14 @@ const clearExpiredCache = () => {
             queryCache.delete(key);
         }
     }
-    
+
     // Limpar cache de relatórios
     for (const [key, value] of reportCache.entries()) {
         if (now - value.timestamp > CACHE_CONFIG.report.ttl) {
             reportCache.delete(key);
         }
     }
-    
+
     // Limpar cache de dashboard
     for (const [key, value] of dashboardCache.entries()) {
         if (now - value.timestamp > CACHE_CONFIG.dashboard.ttl) {
@@ -422,7 +422,7 @@ const manageCacheSize = (cache, maxSize) => {
         const entriesToRemove = Math.floor(maxSize * 0.2);
         const sortedEntries = Array.from(cache.entries())
             .sort((a, b) => a[1].timestamp - b[1].timestamp);
-        
+
         for (let i = 0; i < entriesToRemove; i++) {
             cache.delete(sortedEntries[i][0]);
         }
@@ -452,7 +452,7 @@ const get = async (sql, params = [], cacheType = null) => {
     // Selecionar cache apropriado
     let cache = queryCache;
     let config = CACHE_CONFIG.medium;
-    
+
     if (cacheType === 'dashboard') {
         cache = dashboardCache;
         config = CACHE_CONFIG.dashboard;
@@ -462,7 +462,7 @@ const get = async (sql, params = [], cacheType = null) => {
     } else if (cacheType) {
         config = CACHE_CONFIG[cacheType] || CACHE_CONFIG.medium;
     }
-    
+
     // Verificar cache se solicitado
     if (cacheType) {
         const cacheKey = sql + JSON.stringify(params);
@@ -471,7 +471,7 @@ const get = async (sql, params = [], cacheType = null) => {
             return cached.data;
         }
     }
-    
+
     const conn = await pool.getConnection();
     return new Promise((resolve, reject) => {
         conn.get(sql, params, (err, row) => {
@@ -496,7 +496,7 @@ const all = async (sql, params = [], cacheType = null) => {
     // Selecionar cache apropriado
     let cache = queryCache;
     let config = CACHE_CONFIG.medium;
-    
+
     if (cacheType === 'dashboard') {
         cache = dashboardCache;
         config = CACHE_CONFIG.dashboard;
@@ -506,7 +506,7 @@ const all = async (sql, params = [], cacheType = null) => {
     } else if (cacheType) {
         config = CACHE_CONFIG[cacheType] || CACHE_CONFIG.medium;
     }
-    
+
     // Verificar cache se solicitado
     if (cacheType) {
         const cacheKey = sql + JSON.stringify(params);
@@ -515,7 +515,7 @@ const all = async (sql, params = [], cacheType = null) => {
             return cached.data;
         }
     }
-    
+
     const conn = await pool.getConnection();
     return new Promise((resolve, reject) => {
         conn.all(sql, params, (err, rows) => {
@@ -539,7 +539,7 @@ const all = async (sql, params = [], cacheType = null) => {
 // Função para transações robustas
 const runTransaction = async (operations) => {
     const conn = await pool.getConnection();
-    
+
     return new Promise((resolve, reject) => {
         conn.serialize(() => {
             conn.run("BEGIN IMMEDIATE TRANSACTION", async (err) => {
@@ -547,10 +547,10 @@ const runTransaction = async (operations) => {
                     pool.releaseConnection(conn);
                     return reject(err);
                 }
-                
+
                 try {
                     const results = [];
-                    
+
                     for (const op of operations) {
                         const result = await new Promise((resolveOp, rejectOp) => {
                             conn.run(op.sql, op.params || [], function(opErr) {
@@ -560,13 +560,13 @@ const runTransaction = async (operations) => {
                         });
                         results.push(result);
                     }
-                    
+
                     conn.run("COMMIT", (commitErr) => {
                         pool.releaseConnection(conn);
                         if (commitErr) reject(commitErr);
                         else resolve(results);
                     });
-                    
+
                 } catch (error) {
                     conn.run("ROLLBACK", (rollbackErr) => {
                         pool.releaseConnection(conn);
@@ -582,41 +582,41 @@ const runTransaction = async (operations) => {
 // Validações de dados
 const validateAIH = (data) => {
     const errors = [];
-    
+
     if (!data.numero_aih || typeof data.numero_aih !== 'string' || data.numero_aih.trim().length === 0) {
         errors.push('Número da AIH é obrigatório');
     }
-    
+
     if (!data.valor_inicial || isNaN(parseFloat(data.valor_inicial)) || parseFloat(data.valor_inicial) <= 0) {
         errors.push('Valor inicial deve ser um número positivo');
     }
-    
+
     if (!data.competencia || !/^\d{2}\/\d{4}$/.test(data.competencia)) {
         errors.push('Competência deve estar no formato MM/AAAA');
     }
-    
+
     if (!data.atendimentos || (Array.isArray(data.atendimentos) && data.atendimentos.length === 0)) {
         errors.push('Pelo menos um atendimento deve ser informado');
     }
-    
+
     return errors;
 };
 
 const validateMovimentacao = (data) => {
     const errors = [];
-    
+
     if (!data.tipo || !['entrada_sus', 'saida_hospital'].includes(data.tipo)) {
         errors.push('Tipo de movimentação inválido');
     }
-    
+
     if (!data.status_aih || ![1, 2, 3, 4].includes(parseInt(data.status_aih))) {
         errors.push('Status da AIH inválido');
     }
-    
+
     if (data.valor_conta && (isNaN(parseFloat(data.valor_conta)) || parseFloat(data.valor_conta) < 0)) {
         errors.push('Valor da conta deve ser um número não negativo');
     }
-    
+
     return errors;
 };
 
@@ -629,7 +629,7 @@ const clearCache = (pattern = null) => {
         console.log('Todos os caches limpos');
     } else {
         let cleared = 0;
-        
+
         // Limpar cache principal
         for (const key of queryCache.keys()) {
             if (key.includes(pattern)) {
@@ -637,7 +637,7 @@ const clearCache = (pattern = null) => {
                 cleared++;
             }
         }
-        
+
         // Limpar cache de relatórios
         for (const key of reportCache.keys()) {
             if (key.includes(pattern)) {
@@ -645,7 +645,7 @@ const clearCache = (pattern = null) => {
                 cleared++;
             }
         }
-        
+
         // Limpar cache de dashboard
         for (const key of dashboardCache.keys()) {
             if (key.includes(pattern)) {
@@ -653,7 +653,7 @@ const clearCache = (pattern = null) => {
                 cleared++;
             }
         }
-        
+
         console.log(`Cache limpo: ${cleared} entradas removidas para padrão "${pattern}"`);
     }
 };
@@ -678,10 +678,10 @@ const getDbStats = async () => {
                 (SELECT COUNT(*) FROM usuarios) as total_usuarios,
                 (SELECT COUNT(*) FROM logs_acesso) as total_logs
         `, [], true); // Usar cache
-        
+
         const dbSize = await get("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()");
         const walSize = fs.existsSync(dbPath + '-wal') ? fs.statSync(dbPath + '-wal').size : 0;
-        
+
         return {
             ...stats,
             db_size_mb: Math.round((dbSize.size || 0) / (1024 * 1024) * 100) / 100,
@@ -704,31 +704,31 @@ const createBackup = async () => {
         if (!fs.existsSync(backupDir)) {
             fs.mkdirSync(backupDir, { recursive: true });
         }
-        
+
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
         const backupPath = path.join(backupDir, `aih-backup-${timestamp}.db`);
-        
+
         // Fazer checkpoint do WAL antes do backup
         await run("PRAGMA wal_checkpoint(FULL)");
-        
+
         // Copiar arquivo
         fs.copyFileSync(dbPath, backupPath);
-        
+
         console.log(`Backup criado: ${backupPath}`);
-        
+
         // Limpar backups antigos (manter apenas os últimos 7)
         const backups = fs.readdirSync(backupDir)
             .filter(f => f.startsWith('aih-backup-') && f.endsWith('.db'))
             .sort()
             .reverse();
-            
+
         if (backups.length > 7) {
             for (let i = 7; i < backups.length; i++) {
                 fs.unlinkSync(path.join(backupDir, backups[i]));
                 console.log(`Backup antigo removido: ${backups[i]}`);
             }
         }
-        
+
         return backupPath;
     } catch (err) {
         console.error('Erro ao criar backup:', err);

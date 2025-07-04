@@ -953,6 +953,8 @@ app.post('/api/aih', verificarToken, async (req, res) => {
         // Limpar cache relacionado
         clearCache('aihs');
         clearCache('dashboard');
+        clearCache('COUNT');
+        clearCache('SUM');
 
         console.log(`✅ AIH ${numero_aih} cadastrada com sucesso - ID: ${aihId} - Atendimentos: ${atendimentosProcessados.length}`);
 
@@ -1119,6 +1121,11 @@ app.post('/api/aih/:id/movimentacao', verificarToken, async (req, res) => {
             'UPDATE aihs SET status = ?, valor_atual = ? WHERE id = ?',
             [status_aih, valor_conta, aihId]
         );
+
+        // Limpar cache de dashboard para atualização imediata
+        clearCache('dashboard');
+        clearCache('COUNT');
+        clearCache('SUM');
 
         res.json({ success: true });
     } catch (err) {

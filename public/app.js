@@ -83,6 +83,17 @@ const mostrarTela = (telaId) => {
         tela.classList.remove('ativa');
     });
     document.getElementById(telaId).classList.add('ativa');
+    
+    // Controlar atualização automática baseado na tela
+    if (telaId === 'telaPrincipal') {
+        // Iniciar atualização automática ao entrar na tela principal
+        setTimeout(() => {
+            iniciarAtualizacaoAutomatica();
+        }, 1000); // Aguardar 1 segundo para garantir que o dashboard carregou
+    } else {
+        // Parar atualização automática ao sair da tela principal
+        pararAtualizacaoAutomatica();
+    }
 };
 
 const voltarTelaPrincipal = () => {
@@ -298,6 +309,9 @@ document.getElementById('formLoginAdmin').addEventListener('submit', async (e) =
 
 // Voltar para login principal
 window.voltarLogin = () => {
+    // Parar atualização automática ao voltar para login
+    pararAtualizacaoAutomatica();
+    
     state.token = null;
     state.admin = null;
     state.usuario = null;
@@ -428,6 +442,9 @@ document.getElementById('formAlterarSenhaAdmin').addEventListener('submit', asyn
 
 // Logout
 document.getElementById('btnSair').addEventListener('click', () => {
+    // Parar atualização automática ao fazer logout
+    pararAtualizacaoAutomatica();
+    
     state.token = null;
     state.usuario = null;
     state.admin = null;
@@ -624,6 +641,12 @@ const carregarDashboard = async (competenciaSelecionada = null) => {
         // Animar números (opcional)
         animarNumeros();
 
+        // Iniciar atualização automática apenas se estivermos na tela principal
+        const telaPrincipal = document.getElementById('telaPrincipal');
+        if (telaPrincipal && telaPrincipal.classList.contains('ativa')) {
+            iniciarAtualizacaoAutomatica();
+        }
+
     } catch (err) {
         console.error('Erro ao carregar dashboard:', {
             competencia: competenciaSelecionada,
@@ -642,6 +665,48 @@ const carregarDashboard = async (competenciaSelecionada = null) => {
                 </div>
             `;
         }
+    }
+};
+
+// Sistema de atualização automática do dashboard
+let intervaloDashboard = null;
+
+const iniciarAtualizacaoAutomatica = () => {
+    // Limpar intervalo anterior se existir
+    if (intervaloDashboard) {
+        clearInterval(intervaloDashboard);
+    }
+    
+    // Configurar novo intervalo para atualizar a cada 30 segundos
+    intervaloDashboard = setInterval(async () => {
+        try {
+            // Verificar se estamos na tela principal
+            const telaPrincipal = document.getElementById('telaPrincipal');
+            if (telaPrincipal && telaPrincipal.classList.contains('ativa')) {
+                console.log('🔄 Atualizando dashboard automaticamente...');
+                
+                // Pegar competência atual selecionada
+                const selectCompetencia = document.getElementById('selectCompetencia');
+                const competenciaAtual = selectCompetencia ? selectCompetencia.value : getCompetenciaAtual();
+                
+                // Recarregar dashboard com a competência atual
+                await carregarDashboard(competenciaAtual);
+                
+                console.log('✅ Dashboard atualizado automaticamente');
+            }
+        } catch (error) {
+            console.error('❌ Erro na atualização automática:', error);
+        }
+    }, 30000); // 30 segundos
+    
+    console.log('🔄 Atualização automática do dashboard iniciada (30s)');
+};
+
+const pararAtualizacaoAutomatica = () => {
+    if (intervaloDashboard) {
+        clearInterval(intervaloDashboard);
+        intervaloDashboard = null;
+        console.log('⏹️ Atualização automática do dashboard parada');
     }
 };
 

@@ -1046,7 +1046,9 @@ button:hover {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-```text
+}
+
+```python
 }
 
 .relatorio-card:hover {
@@ -1496,9 +1498,138 @@ tr:last-child {
     gap: 0.5rem;
 }
 
+/* Estilos para o botão de atualização do dashboard */
 .btn-export-relatorio:hover {
+    background: rgba(255,255,255,0.3) !important;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Skeleton loading para dashboard otimizado */
+.skeleton-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+.skeleton-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.skeleton-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.skeleton-text {
+    height: 20px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    width: 60%;
+}
+
+.skeleton-number {
+    height: 32px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    width: 40%;
+}
+
+.skeleton-subtitle {
+    height: 16px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 4px;
+    width: 80%;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.7;
+    }
+}
+
+/* Otimizações de performance para elementos animados */
+.stat-card {
+    will-change: transform, box-shadow;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+.stat-number {
+    will-change: contents;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+/* Loading modal otimizado */
+.loading-modal-otimizado {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Spin animation otimizada */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Otimizações para rendering */
+.dashboard {
+    contain: layout style;
+    transform: translateZ(0);
+}
+
+.resumo-financeiro {
+    contain: layout style;
+    transform: translateZ(0);
+}
+
+/* Micro-animações otimizadas para números grandes */
+.stat-number.large-number {
+    animation: none !important;
+    transition: color 0.3s ease;
+}
+
+/* Performance hints para o browser */
+.clickable-card {
+    cursor: pointer;
+    will-change: transform;
+    contain: layout;
+}
+
+.clickable-card:hover {
+    transform: translateY(-2px);
+    will-change: transform, box-shadow;
 }
 
 .relatorio-container {
@@ -1928,8 +2059,7 @@ tr:last-child {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
-}
-
+}```python
 .status-card {
     background: white;
     border-radius: 12px;
@@ -2737,246 +2867,4 @@ tr:last-child {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.btn-export-relatorio:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-.relatorio-container {
-    animation: fadeInUp 0.5s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.resultado-relatorio {
-    margin-top: 2rem;
-}
-
-/* Filtros de período */
-.filtros-periodo {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.relatorios-periodo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.relatorio-periodo-btn {
-    background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);
-    color: white;
-    border: none;
-    padding: 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.relatorio-periodo-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-/* Estilos para busca rápida */
-.busca-rapida {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.busca-rapida-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.busca-card {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 1.5rem;
-}
-
-.busca-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-}
-
-.btn-busca {
-    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    width: 100%;
-    transition: all 0.3s ease;
-}
-
-.btn-busca:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-/* Estilos para pesquisa avançada */
-.pesquisa-avancada {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.filtros-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.filtro-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.filtro-item label {
-    font-weight: 500;
-    color: #374151;
-}
-
-.filtro-item input,
-.filtro-item select {
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 1rem;
-}
-
-/* Checkbox para status */
-.status-checkboxes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.status-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.status-checkbox input[type="checkbox"] {
-    width: auto;
-    margin: 0;
-}
-
-/* Resultados da pesquisa */
-#resultadosPesquisa {
-    margin-top: 2rem;
-}
-
-#resultadosPesquisa h3 {
-    color: var(--primary);
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-/* Tabelas de resultados */
-#resultadosPesquisa table,
-#resultadoRelatorio table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-#resultadosPesquisa th,
-#resultadosPesquisa td,
-#resultadoRelatorio th,
-#resultadoRelatorio td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-#resultadosPesquisa th,
-#resultadoRelatorio th {
-    background: #f8fafc;
-    font-weight: 600;
-    color: #374151;
-}
-
-#resultadosPesquisa tr:hover,
-#resultadoRelatorio tr:hover {
-    background: #f8fafc;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .dashboard {
-        grid-template-columns: 1fr;
-    }
-
-    .container {
-        padding: 1rem;
-    }
-
-    .modal-content {
-        margin: 10% auto;
-        width: 95%;
-    }
-
-    .relatorios-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .busca-rapida-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .filtros-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .filtros-periodo {
-        grid-template-columns: 1fr;
-    }
-
-    .relatorios-periodo-grid {
-        grid-template-columns: 1fr;
-    }
 }

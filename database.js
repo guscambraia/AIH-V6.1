@@ -361,28 +361,49 @@ const initDB = () => {
     });
 };
 
-// Cache inteligente escalonado para alto volume
+// Cache inteligente escalonado para alto volume com otimizações
 const queryCache = new Map();
 const reportCache = new Map(); // Cache específico para relatórios
 const dashboardCache = new Map(); // Cache específico para dashboard
+const metricasCache = new Map(); // Cache específico para métricas críticas
 
-// TTLs diferenciados por tipo de consulta
+// TTLs diferenciados por tipo de consulta - otimizados para performance
 const CACHE_CONFIG = {
-    quick: { ttl: 5 * 60 * 1000, maxSize: 5000 },      // 5 min - consultas rápidas
-    medium: { ttl: 15 * 60 * 1000, maxSize: 10000 },    // 15 min - consultas médias
-    report: { ttl: 30 * 60 * 1000, maxSize: 2000 },     // 30 min - relatórios
-    dashboard: { ttl: 10 * 60 * 1000, maxSize: 500 }    // 10 min - dashboard
+    instant: { ttl: 30 * 1000, maxSize: 1000 },        // 30s - dashboard crítico
+    quick: { ttl: 2 * 60 * 1000, maxSize: 8000 },      // 2 min - consultas rápidas
+    medium: { ttl: 10 * 60 * 1000, maxSize: 15000 },   // 10 min - consultas médias
+    report: { ttl: 30 * 60 * 1000, maxSize: 3000 },    // 30 min - relatórios
+    dashboard: { ttl: 30 * 1000, maxSize: 100 },       // 30s - dashboard (agressivo)
+    metrics: { ttl: 60 * 1000, maxSize: 200 }          // 1 min - métricas importantes
 };
 
-// Função de limpeza inteligente
+// Métricas de cache para monitoramento
+const cacheMetrics = {
+    hits: 0,
+    misses: 0,
+    evictions: 0,
+    getHitRate: () => {
+        const total = cacheMetrics.hits + cacheMetrics.misses;
+        return total > 0 ? (cacheMetrics.hits / total * 100).toFixed(2) : 0;
+    },
+    reset: () => {
+        cacheMetrics.hits = 0;
+        cacheMetrics.misses = 0;
+        cacheMetrics.evictions = 0;
+    }
+};
+
+// Função de limpeza inteligente otimizada
 const clearExpiredCache = () => {
     const now = Date.now();
+    let totalEvicted = 0;
 
     // Limpar cache principal
     for (const [key, value] of queryCache.entries()) {
         const config = getCacheConfig(key);
         if (now - value.timestamp > config.ttl) {
             queryCache.delete(key);
+            totalEvicted++;
         }
     }
 
@@ -390,14 +411,29 @@ const clearExpiredCache = () => {
     for (const [key, value] of reportCache.entries()) {
         if (now - value.timestamp > CACHE_CONFIG.report.ttl) {
             reportCache.delete(key);
+            totalEvicted++;
         }
     }
 
-    // Limpar cache de dashboard
+    // Limpar cache de dashboard (mais agressivo)
     for (const [key, value] of dashboardCache.entries()) {
         if (now - value.timestamp > CACHE_CONFIG.dashboard.ttl) {
             dashboardCache.delete(key);
+            totalEvicted++;
         }
+    }
+
+    // Limpar cache de métricas
+    for (const [key, value] of metricasCache.entries()) {
+        if (now - value.timestamp > CACHE_CONFIG.metrics.ttl) {
+            metricasCache.delete(key);
+            totalEvicted++;
+        }
+    }
+
+    if (totalEvicted > 0) {
+        cacheMetrics.evictions += totalEvicted;
+        console.log(`🧹 Cache: ${totalEvicted} entradas expiradas removidas`);
     }
 };
 

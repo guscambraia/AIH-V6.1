@@ -673,16 +673,19 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
         const competencia = req.query.competencia || getCompetenciaAtual();
         console.log('📅 Competência selecionada:', competencia);
 
-        // 1. AIH em processamento na competência - consulta otimizada
-        const processamentoCompetencia = await get(`
-            SELECT 
-                COUNT(DISTINCT CASE WHEN m.tipo = 'entrada_sus' THEN m.aih_id END) as entradas,
-                COUNT(DISTINCT CASE WHEN m.tipo = 'saida_hospital' THEN m.aih_id END) as saidas
-            FROM movimentacoes m
-            WHERE m.competencia = ?
-        `, [competencia], 'dashboard'); // Cache específico dashboard
-
-        const emProcessamentoCompetencia = (processamentoCompetencia.entradas || 0) - (processamentoCompetencia.saidas || 0);
+        // 1. AIH em processamento na competência - incluindo AIHs recém-cadastradas
+        // Lógica: AIHs da competência que NÃO tiveram saída para hospital
+        const emProcessamentoCompetencia = await get(`
+            SELECT COUNT(DISTINCT a.id) as total
+            FROM aihs a
+            WHERE a.competencia = ?
+            AND a.id NOT IN (
+                SELECT DISTINCT m.aih_id 
+                FROM movimentacoes m 
+                WHERE m.tipo = 'saida_hospital' 
+                AND m.competencia = ?
+            )
+        `, [competencia, competencia], 'dashboard');
 
         // 2. AIH finalizadas na competência (status 1 e 4)
         const finalizadasCompetencia = await get(`
@@ -700,7 +703,19 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
             AND competencia = ?
         `, [competencia], 'dashboard');
 
-        // 4. Total geral de entradas SUS vs saídas Hospital (desde o início)
+        // 4. Total geral em processamento (desde o início)
+        // Lógica: Todas as AIHs que NÃO tiveram saída para hospital
+        const totalEmProcessamentoGeral = await get(`
+            SELECT COUNT(DISTINCT a.id) as count
+            FROM aihs a
+            WHERE a.id NOT IN (
+                SELECT DISTINCT m.aih_id 
+                FROM movimentacoes m 
+                WHERE m.tipo = 'saida_hospital'
+            )
+        `, [], 'dashboard');
+
+        // Estatísticas de movimentações para contexto
         const totalEntradasSUS = await get(`
             SELECT COUNT(DISTINCT aih_id) as count 
             FROM movimentacoes 
@@ -712,8 +727,6 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
             FROM movimentacoes 
             WHERE tipo = 'saida_hospital'
         `, [], 'dashboard');
-
-        const totalEmProcessamento = (totalEntradasSUS.count || 0) - (totalSaidasHospital.count || 0);
 
         // 5. Total de AIHs finalizadas desde o início (status 1 e 4)
         const totalFinalizadasGeral = await get(`
@@ -759,7 +772,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
             competencias_disponiveis: competenciasDisponiveis.map(c => c.competencia),
 
             // Métricas da competência
-            em_processamento_competencia: emProcessamentoCompetencia,
+            em_processamento_competencia: emProcessamentoCompetencia.total || 0,
             finalizadas_competencia: finalizadasCompetencia.count,
             com_pendencias_competencia: comPendenciasCompetencia.count,
             total_aihs_competencia: totalAIHsCompetencia.count,
@@ -767,7 +780,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
             // Métricas gerais (desde o início)
             total_entradas_sus: totalEntradasSUS.count,
             total_saidas_hospital: totalSaidasHospital.count,
-            total_em_processamento_geral: totalEmProcessamento,
+            total_em_processamento_geral: totalEmProcessamentoGeral.count || 0,
             total_finalizadas_geral: totalFinalizadasGeral.count,
             total_aihs_geral: totalAIHsGeral.count,
 

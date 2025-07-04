@@ -1045,8 +1045,10 @@ button:hover {
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2Code changes applied to correct the alignment of the 'Quantidade' title in the glosas table.
+
 ```text
+px 8px rgba(0, 0, 0, 0.1);
 }
 
 .relatorio-card:hover {

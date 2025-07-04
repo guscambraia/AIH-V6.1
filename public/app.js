@@ -491,141 +491,26 @@ const animarNumero = (elementId, valorFinal) => {
     }, 16);
 };
 
-// Sistema de cache local inteligente para dashboard
-const dashboardLocalCache = {
-    data: new Map(),
-    timestamps: new Map(),
-    TTL: 15000, // 15 segundos cache local
-    
-    set(key, value) {
-        this.data.set(key, value);
-        this.timestamps.set(key, Date.now());
-    },
-    
-    get(key) {
-        const timestamp = this.timestamps.get(key);
-        if (!timestamp || Date.now() - timestamp > this.TTL) {
-            this.data.delete(key);
-            this.timestamps.delete(key);
-            return null;
-        }
-        return this.data.get(key);
-    },
-    
-    clear() {
-        this.data.clear();
-        this.timestamps.clear();
-    }
-};
-
-// Dashboard aprimorado com otimizações de performance
+// Dashboard aprimorado com seletor de competência
 const carregarDashboard = async (competenciaSelecionada = null) => {
     try {
         // Se não foi passada competência, usar a atual
         const competencia = competenciaSelecionada || getCompetenciaAtual();
 
-        // Verificar cache local primeiro (para evitar requests desnecessários)
-        const cacheKey = `dashboard_${competencia}`;
-        let dados = dashboardLocalCache.get(cacheKey);
-        
-        if (!dados) {
-            // Mostrar loading apenas se não há dados em cache
-            mostrarLoadingDashboard();
-            
-            // Buscar dados do servidor
-            dados = await api(`/dashboard?competencia=${competencia}`);
-            
-            // Armazenar no cache local
-            dashboardLocalCache.set(cacheKey, dados);
+        // Buscar dados do dashboard com a competência
+        const dados = await api(`/dashboard?competencia=${competencia}`);
+
+        // Criar/atualizar seletor de competência
+        let seletorContainer = document.querySelector('.seletor-competencia-container');
+        if (!seletorContainer) {
+            // Criar container do seletor apenas se não existir
+            const dashboardContainer = document.querySelector('.dashboard');
+            seletorContainer = document.createElement('div');
+            seletorContainer.className = 'seletor-competencia-container';
+            dashboardContainer.parentNode.insertBefore(seletorContainer, dashboardContainer);
         }
 
-        // Renderizar dashboard de forma assíncrona para não bloquear UI
-        await renderizarDashboardOtimizado(dados, competencia);
-
-        // Iniciar atualização automática apenas se estivermos na tela principal
-        const telaPrincipal = document.getElementById('telaPrincipal');
-        if (telaPrincipal && telaPrincipal.classList.contains('ativa')) {
-            iniciarAtualizacaoAutomatica();
-        }
-
-    } catch (err) {
-        console.error('Erro ao carregar dashboard:', {
-            competencia: competenciaSelecionada,
-            error: err.message,
-            stack: err.stack
-        });
-        
-        // Mostrar mensagem de erro no dashboard
-        const dashboardElement = document.querySelector('.dashboard');
-        if (dashboardElement) {
-            dashboardElement.innerHTML = `
-                <div class="erro-dashboard">
-                    <p>⚠️ Erro ao carregar dados do dashboard</p>
-                    <p style="font-size: 0.875rem; color: #64748b;">Erro: ${err.message}</p>
-                    <button onclick="carregarDashboard()">Tentar novamente</button>
-                </div>
-            `;
-        }
-    }
-};
-
-// Função para mostrar loading otimizado
-const mostrarLoadingDashboard = () => {
-    const dashboard = document.querySelector('.dashboard');
-    if (dashboard) {
-        // Skeleton loading rápido
-        dashboard.innerHTML = `
-            <div class="skeleton-dashboard">
-                ${Array(6).fill(0).map(() => `
-                    <div class="skeleton-card">
-                        <div class="skeleton-icon"></div>
-                        <div class="skeleton-text"></div>
-                        <div class="skeleton-number"></div>
-                        <div class="skeleton-subtitle"></div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-};
-
-// Renderização otimizada do dashboard (assíncrona para performance)
-const renderizarDashboardOtimizado = async (dados, competencia) => {
-    return new Promise((resolve) => {
-        // Usar requestAnimationFrame para renderização suave
-        requestAnimationFrame(() => {
-            // Criar/atualizar seletor de competência apenas se necessário
-            atualizarSeletorCompetencia(dados, competencia);
-            
-            // Renderizar cards de forma otimizada
-            renderizarCardsDashboard(dados, competencia);
-            
-            // Renderizar resumo financeiro
-            renderizarResumoFinanceiro(dados, competencia);
-            
-            // Animar números de forma otimizada
-            setTimeout(() => {
-                animarNumerosOtimizado();
-                resolve();
-            }, 50);
-        });
-    });
-};
-
-// Atualizar seletor apenas se necessário
-const atualizarSeletorCompetencia = (dados, competencia) => {
-    let seletorContainer = document.querySelector('.seletor-competencia-container');
-    
-    if (!seletorContainer) {
-        const dashboardContainer = document.querySelector('.dashboard');
-        seletorContainer = document.createElement('div');
-        seletorContainer.className = 'seletor-competencia-container';
-        dashboardContainer.parentNode.insertBefore(seletorContainer, dashboardContainer);
-    }
-
-    // Verificar se precisa atualizar o conteúdo
-    const selectExistente = seletorContainer.querySelector('#selectCompetencia');
-    if (!selectExistente || selectExistente.value !== competencia) {
+        // Sempre atualizar o conteúdo do seletor
         seletorContainer.innerHTML = `
             <div class="seletor-competencia">
                 <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
@@ -652,304 +537,150 @@ const atualizarSeletorCompetencia = (dados, competencia) => {
                 </div>
             </div>
         `;
-    }
-};
 
-// Renderizar cards de forma otimizada
-const renderizarCardsDashboard = (dados, competencia) => {
-    const dashboard = document.querySelector('.dashboard');
-    
-    // Template otimizado dos cards
-    const cardsHTML = `
-        <!-- Card 1: Em Processamento na Competência -->
-        <div class="stat-card clickable-card" onclick="visualizarAIHsPorCategoriaOtimizada('em_processamento', '${competencia}')" 
-             style="cursor: pointer; transition: all 0.3s ease;"
-             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
-            <div class="stat-icon">📊</div>
-            <h3>Em Processamento</h3>
-            <p class="stat-number" id="emProcessamentoCompetencia">${dados.em_processamento_competencia}</p>
-            <p class="stat-subtitle">AIHs em análise em ${competencia}</p>
-            <p class="stat-detail">📋 Estas AIHs estão na Auditoria SUS em processamento</p>
-            <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
-        </div>
-
-        <!-- Card 2: Finalizadas na Competência -->
-        <div class="stat-card success clickable-card" onclick="visualizarAIHsPorCategoriaOtimizada('finalizadas', '${competencia}')"
-             style="cursor: pointer; transition: all 0.3s ease;"
-             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
-            <div class="stat-icon">✅</div>
-            <h3>Finalizadas</h3>
-            <p class="stat-number" id="finalizadasCompetencia">${dados.finalizadas_competencia}</p>
-            <p class="stat-subtitle">AIHs concluídas em ${competencia}</p>
-            <p class="stat-detail">🤝 Estas AIHs já tiveram sua auditoria concluída com concordância de ambas auditorias</p>
-            <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
-        </div>
-
-        <!-- Card 3: Com Pendências na Competência -->
-        <div class="stat-card warning clickable-card" onclick="visualizarAIHsPorCategoriaOtimizada('com_pendencias', '${competencia}')"
-             style="cursor: pointer; transition: all 0.3s ease;"
-             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
-            <div class="stat-icon">⚠️</div>
-            <h3>Com Pendências</h3>
-            <p class="stat-number" id="comPendenciasCompetencia">${dados.com_pendencias_competencia}</p>
-            <p class="stat-subtitle">AIHs com glosas em ${competencia}</p>
-            <p class="stat-detail">🔄 Estas AIHs estão com alguma pendência passível de recurso e discussão pelas partes envolvidas</p>
-            <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
-        </div>
-
-        <!-- Card 4: Total Geral em Processamento -->
-        <div class="stat-card info clickable-card" onclick="visualizarAIHsPorCategoriaOtimizada('total_processamento', 'geral')"
-             style="cursor: pointer; transition: all 0.3s ease;"
-             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
-            <div class="stat-icon">🏥</div>
-            <h3>Total em Processamento</h3>
-            <p class="stat-number" id="totalProcessamentoGeral">${dados.total_em_processamento_geral}</p>
-            <p class="stat-subtitle">Desde o início do sistema</p>
-            <p class="stat-detail">📊 Total: ${dados.total_entradas_sus} entradas - ${dados.total_saidas_hospital} saídas</p>
-            <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
-        </div>
-
-        <!-- Card 5: Total Finalizadas (Histórico Geral) -->
-        <div class="stat-card success clickable-card" onclick="visualizarAIHsPorCategoriaOtimizada('total_finalizadas', 'geral')" 
-             style="border-left: 4px solid #10b981; cursor: pointer; transition: all 0.3s ease;"
-             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
-            <div class="stat-icon">🎯</div>
-            <h3>Total Finalizadas</h3>
-            <p class="stat-number" id="totalFinalizadasGeral">${dados.total_finalizadas_geral}</p>
-            <p class="stat-subtitle">Desde o início do sistema</p>
-            <p class="stat-detail">✅ AIHs concluídas com auditoria finalizada</p>
-            <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
-        </div>
-
-        <!-- Card 6: Total Geral Cadastradas -->
-        <div class="stat-card clickable-card" onclick="visualizarAIHsPorCategoriaOtimizada('total_cadastradas', 'geral')" 
-             style="border-left: 4px solid #6366f1; cursor: pointer; transition: all 0.3s ease;"
-             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
-            <div class="stat-icon">📈</div>
-            <h3>Total Cadastradas</h3>
-            <p class="stat-number" id="totalAIHsGeral">${dados.total_aihs_geral}</p>
-            <p class="stat-subtitle">Desde o início do sistema</p>
-            <p class="stat-detail">📋 Todas as AIHs registradas no sistema</p>
-            <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
-        </div>
-    `;
-
-    dashboard.innerHTML = cardsHTML;
-};
-
-// Renderizar resumo financeiro de forma otimizada
-const renderizarResumoFinanceiro = (dados, competencia) => {
-    const dashboardContainer = document.querySelector('.dashboard');
-    let resumoExistente = document.querySelector('.resumo-financeiro');
-    
-    if (!resumoExistente) {
-        resumoExistente = document.createElement('div');
-        resumoExistente.className = 'resumo-financeiro';
-        dashboardContainer.parentNode.insertBefore(resumoExistente, dashboardContainer.nextSibling);
-    }
-
-    resumoExistente.innerHTML = `
-        <h3>💰 Resumo Financeiro - ${competencia}</h3>
-        <div class="resumo-cards">
-            <div class="resumo-card">
-                <span class="resumo-label">Valor Inicial Total</span>
-                <span class="resumo-valor">R$ ${dados.valores_competencia.inicial.toFixed(2)}</span>
+        // Atualizar cards do dashboard
+        const dashboard = document.querySelector('.dashboard');
+        dashboard.innerHTML = `
+            <!-- Card 1: Em Processamento na Competência -->
+            <div class="stat-card clickable-card" onclick="visualizarAIHsPorCategoria('em_processamento', '${competencia}')" 
+                 style="cursor: pointer; transition: all 0.3s ease;"
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                <div class="stat-icon">📊</div>
+                <h3>Em Processamento</h3>
+                <p class="stat-number" id="emProcessamentoCompetencia">${dados.em_processamento_competencia}</p>
+                <p class="stat-subtitle">AIHs em análise em ${competencia}</p>
+                <p class="stat-detail">📋 Estas AIHs estão na Auditoria SUS em processamento</p>
+                <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
             </div>
-            <div class="resumo-card">
-                <span class="resumo-label">Valor Atual Total</span>
-                <span class="resumo-valor">R$ ${dados.valores_competencia.atual.toFixed(2)}</span>
-            </div>
-            <div class="resumo-card">
-                <span class="resumo-label">Diferença Total (Glosas)</span>
-                <span class="resumo-valor" style="color: var(--danger)">R$ ${(dados.valores_competencia.inicial - dados.valores_competencia.atual).toFixed(2)}</span>
-            </div>
-            <div class="resumo-card">
-                <span class="resumo-label">Total de AIHs</span>
-                <span class="resumo-valor">${dados.total_aihs_competencia}</span>
-            </div>
-        </div>
-    `;
-};
 
-// Animação de números otimizada
-const animarNumerosOtimizado = () => {
-    const numeros = document.querySelectorAll('.stat-number');
-    
-    // Usar requestAnimationFrame para animações suaves
-    numeros.forEach(elemento => {
-        const valorFinal = parseInt(elemento.textContent) || 0;
-        
-        // Pular animação para valores muito grandes (performance)
-        if (valorFinal > 10000) {
-            return;
+            <!-- Card 2: Finalizadas na Competência -->
+            <div class="stat-card success clickable-card" onclick="visualizarAIHsPorCategoria('finalizadas', '${competencia}')"
+                 style="cursor: pointer; transition: all 0.3s ease;"
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                <div class="stat-icon">✅</div>
+                <h3>Finalizadas</h3>
+                <p class="stat-number" id="finalizadasCompetencia">${dados.finalizadas_competencia}</p>
+                <p class="stat-subtitle">AIHs concluídas em ${competencia}</p>
+                <p class="stat-detail">🤝 Estas AIHs já tiveram sua auditoria concluída com concordância de ambas auditorias</p>
+                <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
+            </div>
+
+            <!-- Card 3: Com Pendências na Competência -->
+            <div class="stat-card warning clickable-card" onclick="visualizarAIHsPorCategoria('com_pendencias', '${competencia}')"
+                 style="cursor: pointer; transition: all 0.3s ease;"
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                <div class="stat-icon">⚠️</div>
+                <h3>Com Pendências</h3>
+                <p class="stat-number" id="comPendenciasCompetencia">${dados.com_pendencias_competencia}</p>
+                <p class="stat-subtitle">AIHs com glosas em ${competencia}</p>
+                <p class="stat-detail">🔄 Estas AIHs estão com alguma pendência passível de recurso e discussão pelas partes envolvidas</p>
+                <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
+            </div>
+
+            <!-- Card 4: Total Geral em Processamento -->
+            <div class="stat-card info clickable-card" onclick="visualizarAIHsPorCategoria('total_processamento', 'geral')"
+                 style="cursor: pointer; transition: all 0.3s ease;"
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                <div class="stat-icon">🏥</div>
+                <h3>Total em Processamento</h3>
+                <p class="stat-number" id="totalProcessamentoGeral">${dados.total_em_processamento_geral}</p>
+                <p class="stat-subtitle">Desde o início do sistema</p>
+                <p class="stat-detail">📊 Total: ${dados.total_entradas_sus} entradas - ${dados.total_saidas_hospital} saídas</p>
+                <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
+            </div>
+
+            <!-- Card 5: Total Finalizadas (Histórico Geral) -->
+            <div class="stat-card success clickable-card" onclick="visualizarAIHsPorCategoria('total_finalizadas', 'geral')" 
+                 style="border-left: 4px solid #10b981; cursor: pointer; transition: all 0.3s ease;"
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                <div class="stat-icon">🎯</div>
+                <h3>Total Finalizadas</h3>
+                <p class="stat-number" id="totalFinalizadasGeral">${dados.total_finalizadas_geral}</p>
+                <p class="stat-subtitle">Desde o início do sistema</p>
+                <p class="stat-detail">✅ AIHs concluídas com auditoria finalizada</p>
+                <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
+            </div>
+
+            <!-- Card 6: Total Geral Cadastradas -->
+            <div class="stat-card clickable-card" onclick="visualizarAIHsPorCategoria('total_cadastradas', 'geral')" 
+                 style="border-left: 4px solid #6366f1; cursor: pointer; transition: all 0.3s ease;"
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                <div class="stat-icon">📈</div>
+                <h3>Total Cadastradas</h3>
+                <p class="stat-number" id="totalAIHsGeral">${dados.total_aihs_geral}</p>
+                <p class="stat-subtitle">Desde o início do sistema</p>
+                <p class="stat-detail">📋 Todas as AIHs registradas no sistema</p>
+                <p class="stat-extra">✨ Clique para ver a lista detalhada</p>
+            </div>
+        `;
+
+        // Adicionar seção de resumo financeiro
+        const resumoFinanceiro = document.createElement('div');
+        resumoFinanceiro.className = 'resumo-financeiro';
+        resumoFinanceiro.innerHTML = `
+            <h3>💰 Resumo Financeiro - ${competencia}</h3>
+            <div class="resumo-cards">
+                <div class="resumo-card">
+                    <span class="resumo-label">Valor Inicial Total</span>
+                    <span class="resumo-valor">R$ ${dados.valores_competencia.inicial.toFixed(2)}</span>
+                </div>
+                <div class="resumo-card">
+                    <span class="resumo-label">Valor Atual Total</span>
+                    <span class="resumo-valor">R$ ${dados.valores_competencia.atual.toFixed(2)}</span>
+                </div>
+                <div class="resumo-card">
+                    <span class="resumo-label">Diferença Total (Glosas)</span>
+                    <span class="resumo-valor" style="color: var(--danger)">R$ ${(dados.valores_competencia.inicial - dados.valores_competencia.atual).toFixed(2)}</span>
+                </div>
+                <div class="resumo-card">
+                    <span class="resumo-label">Total de AIHs</span>
+                    <span class="resumo-valor">${dados.total_aihs_competencia}</span>
+                </div>
+            </div>
+        `;
+
+        // Adicionar após o dashboard
+        const dashboardContainer = document.querySelector('.dashboard');
+        const resumoExistente = document.querySelector('.resumo-financeiro');
+        if (resumoExistente) {
+            resumoExistente.remove();
         }
-        
-        let valorAtual = 0;
-        const duracao = 800; // Reduzido para 800ms
-        const incremento = valorFinal / (duracao / 16);
+        dashboardContainer.parentNode.insertBefore(resumoFinanceiro, dashboardContainer.nextSibling);
 
-        const animar = () => {
-            valorAtual += incremento;
-            if (valorAtual >= valorFinal) {
-                valorAtual = valorFinal;
-                elemento.textContent = Math.round(valorAtual);
-                return;
-            }
-            elemento.textContent = Math.round(valorAtual);
-            requestAnimationFrame(animar);
-        };
+        // Animar números (opcional)
+        animarNumeros();
 
-        requestAnimationFrame(animar);
-    });
-};
-
-// Versão otimizada da visualização por categoria
-window.visualizarAIHsPorCategoriaOtimizada = async (categoria, periodo) => {
-    try {
-        console.log(`Carregando AIHs da categoria: ${categoria}, período: ${periodo}`);
-        
-        // Cache para evitar requisições desnecessárias
-        const cacheKey = `categoria_${categoria}_${periodo}`;
-        let cached = dashboardLocalCache.get(cacheKey);
-        
-        if (!cached) {
-            // Mostrar loading otimizado
-            const loadingModal = criarModalLoadingOtimizado();
-            document.body.appendChild(loadingModal);
-
-            // Fazer requisição
-            const response = await api('/pesquisar', {
-                method: 'POST',
-                body: JSON.stringify({ filtros: construirFiltrosCategoria(categoria, periodo) })
-            });
-
-            // Remover loading
-            document.body.removeChild(loadingModal);
-            
-            // Cache resultado
-            dashboardLocalCache.set(cacheKey, response);
-            cached = response;
+        // Iniciar atualização automática apenas se estivermos na tela principal
+        const telaPrincipal = document.getElementById('telaPrincipal');
+        if (telaPrincipal && telaPrincipal.classList.contains('ativa')) {
+            iniciarAtualizacaoAutomatica();
         }
-
-        // Processar resultado
-        processarResultadoCategoria(cached, categoria, periodo);
 
     } catch (err) {
-        console.error('Erro ao carregar AIHs por categoria:', err);
-        removerModalLoading();
-        alert('Erro ao carregar AIHs: ' + err.message);
-    }
-};
-
-// Modal de loading otimizado
-const criarModalLoadingOtimizado = () => {
-    const modal = document.createElement('div');
-    modal.className = 'loading-modal-otimizado';
-    modal.style.cssText = `
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-        background: rgba(0,0,0,0.7); display: flex; align-items: center; 
-        justify-content: center; z-index: 9999;
-    `;
-    modal.innerHTML = `
-        <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; min-width: 300px;">
-            <div style="width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; 
-                        border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-            <p style="margin: 0; color: #64748b; font-weight: 500;">Carregando dados...</p>
-            <p style="margin: 0.5rem 0 0 0; color: #94a3b8; font-size: 0.875rem;">Aguarde um momento</p>
-        </div>
-    `;
-    return modal;
-};
-
-// Remover modal de loading
-const removerModalLoading = () => {
-    const modal = document.querySelector('.loading-modal-otimizado');
-    if (modal && modal.parentNode) {
-        document.body.removeChild(modal);
-    }
-};
-
-// Construir filtros de forma otimizada
-const construirFiltrosCategoria = (categoria, periodo) => {
-    switch(categoria) {
-        case 'em_processamento':
-            return { em_processamento_competencia: periodo };
-        case 'finalizadas':
-            const filtrosFinalizada = { status: [1, 4] };
-            if (periodo !== 'geral') filtrosFinalizada.competencia = periodo;
-            return filtrosFinalizada;
-        case 'com_pendencias':
-            const filtrosPendencia = { status: [2, 3] };
-            if (periodo !== 'geral') filtrosPendencia.competencia = periodo;
-            return filtrosPendencia;
-        case 'total_processamento':
-            return { em_processamento_geral: true };
-        case 'total_finalizadas':
-            return { status: [1, 4] };
-        case 'total_cadastradas':
-            return {};
-        default:
-            return {};
-    }
-};
-
-// Processar resultado de categoria de forma otimizada
-const processarResultadoCategoria = (response, categoria, periodo) => {
-    // Definir título baseado na categoria
-    const titulos = {
-        'em_processamento': `📊 AIHs Em Processamento - ${periodo}`,
-        'finalizadas': `✅ AIHs Finalizadas${periodo !== 'geral' ? ` - ${periodo}` : ' (Histórico Geral)'}`,
-        'com_pendencias': `⚠️ AIHs Com Pendências${periodo !== 'geral' ? ` - ${periodo}` : ' (Histórico Geral)'}`,
-        'total_processamento': '🏥 Total de AIHs Em Processamento (Geral)',
-        'total_finalizadas': '🎯 Total de AIHs Finalizadas (Geral)',
-        'total_cadastradas': '📈 Total de AIHs Cadastradas (Geral)'
-    };
-
-    const descricoes = {
-        'em_processamento': 'AIHs que estão atualmente na Auditoria SUS em processamento',
-        'finalizadas': 'AIHs que já tiveram sua auditoria concluída com concordância de ambas auditorias',
-        'com_pendencias': 'AIHs que estão com alguma pendência passível de recurso e discussão pelas partes envolvidas',
-        'total_processamento': 'Todas as AIHs que estão em processamento desde o início do sistema',
-        'total_finalizadas': 'Todas as AIHs finalizadas desde o início do sistema',
-        'total_cadastradas': 'Todas as AIHs registradas no sistema desde o início'
-    };
-
-    // Ir para tela de pesquisa e exibir resultados
-    mostrarTela('telaPesquisa');
-    
-    // Carregar profissionais
-    setTimeout(() => {
-        carregarProfissionaisPesquisa();
-    }, 100);
-    
-    // Aguardar um pouco para garantir que a tela foi carregada
-    setTimeout(() => {
-        if (!response.resultados || response.resultados.length === 0) {
-            const container = document.getElementById('resultadosPesquisa');
-            if (container) {
-                container.innerHTML = `
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2rem; text-align: center; margin-top: 2rem;">
-                        <h3 style="color: #64748b; margin-bottom: 1rem;">${titulos[categoria]}</h3>
-                        <p style="color: #64748b; margin-bottom: 1rem;">${descricoes[categoria]}</p>
-                        <p style="color: #64748b;">📭 Nenhuma AIH encontrada nesta categoria.</p>
-                        <button onclick="voltarTelaPrincipal()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                            ← Voltar ao Dashboard
-                        </button>
-                    </div>
-                `;
-            }
-            return;
+        console.error('Erro ao carregar dashboard:', {
+            competencia: competenciaSelecionada,
+            error: err.message,
+            stack: err.stack
+        });
+        
+        // Mostrar mensagem de erro no dashboard
+        const dashboardElement = document.querySelector('.dashboard');
+        if (dashboardElement) {
+            dashboardElement.innerHTML = `
+                <div class="erro-dashboard">
+                    <p>⚠️ Erro ao carregar dados do dashboard</p>
+                    <p style="font-size: 0.875rem; color: #64748b;">Erro: ${err.message}</p>
+                    <button onclick="carregarDashboard()">Tentar novamente</button>
+                </div>
+            `;
         }
-
-        // Usar o sistema de paginação e ordenação otimizado
-        exibirResultadosPesquisa(response.resultados, titulos[categoria], descricoes[categoria]);
-    }, 200);
+    }
 };
 
 // Sistema de atualização automática do dashboard

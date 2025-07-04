@@ -690,25 +690,31 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
         const aihsExcluidasCompetencia = aihsExcluidas.filter(a => a.competencia_excluida === competencia).map(a => a.aih_id).filter(id => id);
 
         // 1. AIH em processamento na competência 
-        // Lógica: AIHs da competência que NÃO tiveram saída para hospital, excluindo apenas AIHs completamente deletadas
+        // Lógica correta: AIHs onde número de entradas SUS > número de saídas para hospital
         let sqlEmProcessamentoCompetencia = `
             SELECT COUNT(DISTINCT a.id) as total
             FROM aihs a
             WHERE a.competencia = ?
-            AND a.id NOT IN (
-                SELECT DISTINCT m.aih_id 
-                FROM movimentacoes m 
-                WHERE m.tipo = 'saida_hospital' 
-                AND (m.competencia = ? OR m.competencia IS NULL)
+            AND a.id IN (
+                SELECT aih_id
+                FROM (
+                    SELECT 
+                        aih_id,
+                        SUM(CASE WHEN tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
+                        SUM(CASE WHEN tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
+                    FROM movimentacoes
+                    GROUP BY aih_id
+                    HAVING entradas > saidas
+                ) AS em_processamento
             )
         `;
         
-        // Filtrar apenas AIHs completamente excluídas (não movimentações individuais)
+        // Filtrar apenas AIHs completamente excluídas
         if (aihsExcluidasCompetencia.length > 0) {
             sqlEmProcessamentoCompetencia += ` AND a.id NOT IN (${aihsExcluidasCompetencia.map(() => '?').join(',')})`;
         }
 
-        const paramsEmProcessamento = [competencia, competencia, ...aihsExcluidasCompetencia];
+        const paramsEmProcessamento = [competencia, ...aihsExcluidasCompetencia];
         const emProcessamentoCompetencia = await get(sqlEmProcessamentoCompetencia, paramsEmProcessamento, 'dashboard');
 
         // 2. AIH finalizadas na competência (status 1 e 4) - excluindo apenas AIHs completamente excluídas
@@ -741,14 +747,21 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
         const paramsPendencias = [competencia, ...aihsExcluidasCompetencia];
         const comPendenciasCompetencia = await get(sqlComPendenciasCompetencia, paramsPendencias, 'dashboard');
 
-        // 4. Total geral em processamento (desde o início) - excluindo apenas AIHs completamente excluídas
+        // 4. Total geral em processamento (desde o início) - lógica correta baseada no histórico
         let sqlTotalEmProcessamentoGeral = `
             SELECT COUNT(DISTINCT a.id) as count
             FROM aihs a
-            WHERE a.id NOT IN (
-                SELECT DISTINCT m.aih_id 
-                FROM movimentacoes m 
-                WHERE m.tipo = 'saida_hospital'
+            WHERE a.id IN (
+                SELECT aih_id
+                FROM (
+                    SELECT 
+                        aih_id,
+                        SUM(CASE WHEN tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
+                        SUM(CASE WHEN tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
+                    FROM movimentacoes
+                    GROUP BY aih_id
+                    HAVING entradas > saidas
+                ) AS em_processamento_geral
             )
         `;
         
@@ -1325,28 +1338,29 @@ app.post('/api/pesquisar', verificarToken, async (req, res) => {
         if (filtros.em_processamento_competencia) {
             const competencia = filtros.em_processamento_competencia;
 
-            // Buscar AIHs que tiveram entrada SUS mas não saída hospital na competência específica
+            // Buscar AIHs da competência onde entradas SUS > saídas hospital (lógica correta)
             sql = `
                 SELECT a.*, COUNT(g.id) as total_glosas 
                 FROM aihs a 
                 LEFT JOIN glosas g ON a.id = g.aih_id AND g.ativa = 1 
-                WHERE a.id IN (
-                    SELECT DISTINCT m1.aih_id 
-                    FROM movimentacoes m1 
-                    WHERE m1.tipo = 'entrada_sus' 
-                    AND m1.competencia = ?
-                    AND m1.aih_id NOT IN (
-                        SELECT DISTINCT m2.aih_id 
-                        FROM movimentacoes m2 
-                        WHERE m2.tipo = 'saida_hospital' 
-                        AND m2.competencia = ?
-                    )
+                WHERE a.competencia = ?
+                AND a.id IN (
+                    SELECT aih_id
+                    FROM (
+                        SELECT 
+                            aih_id,
+                            SUM(CASE WHEN tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
+                            SUM(CASE WHEN tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
+                        FROM movimentacoes
+                        GROUP BY aih_id
+                        HAVING entradas > saidas
+                    ) AS em_processamento
                 )
             `;
             
             // Resetar params e adicionar competência
             params.length = 0;
-            params.push(competencia, competencia);
+            params.push(competencia);
             
             // Adicionar filtro para AIHs excluídas se houver
             if (aihsExcluidasIds.length > 0) {
@@ -1361,14 +1375,16 @@ app.post('/api/pesquisar', verificarToken, async (req, res) => {
                 FROM aihs a 
                 LEFT JOIN glosas g ON a.id = g.aih_id AND g.ativa = 1 
                 WHERE a.id IN (
-                    SELECT DISTINCT m1.aih_id 
-                    FROM movimentacoes m1 
-                    WHERE m1.tipo = 'entrada_sus' 
-                    AND m1.aih_id NOT IN (
-                        SELECT DISTINCT m2.aih_id 
-                        FROM movimentacoes m2 
-                        WHERE m2.tipo = 'saida_hospital'
-                    )
+                    SELECT aih_id
+                    FROM (
+                        SELECT 
+                            aih_id,
+                            SUM(CASE WHEN tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
+                            SUM(CASE WHEN tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
+                        FROM movimentacoes
+                        GROUP BY aih_id
+                        HAVING entradas > saidas
+                    ) AS em_processamento_geral
                 )
             `;
             
@@ -2267,12 +2283,28 @@ app.post('/api/relatorios/:tipo', verificarToken, async (req, res) => {
                     ORDER BY mes DESC
                 `, params);
 
+                // Calcular AIHs em processamento corretamente (baseado no histórico por AIH)
+                const aihsEmProcessamentoReal = await get(`
+                    SELECT COUNT(*) as total
+                    FROM (
+                        SELECT 
+                            aih_id,
+                            SUM(CASE WHEN tipo = 'entrada_sus' THEN 1 ELSE 0 END) as entradas,
+                            SUM(CASE WHEN tipo = 'saida_hospital' THEN 1 ELSE 0 END) as saidas
+                        FROM movimentacoes m
+                        JOIN aihs a ON m.aih_id = a.id
+                        WHERE 1=1 ${filtroWhere.replace('competencia', 'm.competencia').replace('criado_em', 'm.data_movimentacao')}
+                        GROUP BY aih_id
+                        HAVING entradas > saidas
+                    ) AS processamento_real
+                `, params);
+
                 resultado = {
                     resumo: {
                         total_entradas_sus: fluxoEntradasSUS.total_entradas || 0,
                         total_saidas_hospital: fluxoSaidasHospital.total_saidas || 0,
                         diferenca_fluxo: (fluxoEntradasSUS.total_entradas || 0) - (fluxoSaidasHospital.total_saidas || 0),
-                        aihs_em_processamento: (fluxoEntradasSUS.total_entradas || 0) - (fluxoSaidasHospital.total_saidas || 0)
+                        aihs_em_processamento: aihsEmProcessamentoReal.total || 0
                     },
                     fluxo_mensal: fluxoMensalMovimentacoes
                 };

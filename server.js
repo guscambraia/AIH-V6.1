@@ -673,7 +673,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
         const competencia = req.query.competencia || getCompetenciaAtual();
         console.log('📅 Competência selecionada:', competencia);
 
-        // Buscar AIHs e movimentações excluídas para ajuste dos cálculos
+        // Buscar apenas AIHs completamente excluídas (não movimentações individuais)
         const aihsExcluidas = await all(`
             SELECT DISTINCT json_extract(dados_excluidos, '$.aih.id') as aih_id,
                             json_extract(dados_excluidos, '$.aih.numero_aih') as numero_aih,
@@ -683,37 +683,14 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
             AND json_extract(dados_excluidos, '$.aih.id') IS NOT NULL
         `, [], 'dashboard');
 
-        const movimentacoesExcluidas = await all(`
-            SELECT json_extract(dados_excluidos, '$.id') as mov_id,
-                   json_extract(dados_excluidos, '$.numero_aih') as numero_aih,
-                   json_extract(dados_excluidos, '$.tipo') as tipo,
-                   json_extract(dados_excluidos, '$.competencia') as competencia_mov
-            FROM logs_exclusao 
-            WHERE tipo_exclusao = 'movimentacao'
-            AND json_extract(dados_excluidos, '$.id') IS NOT NULL
-        `, [], 'dashboard');
+        console.log(`📊 Encontradas ${aihsExcluidas.length} AIHs completamente excluídas`);
 
-        console.log(`📊 Encontradas ${aihsExcluidas.length} AIHs excluídas e ${movimentacoesExcluidas.length} movimentações excluídas`);
-
-        // Criar lista de AIHs excluídas para filtrar das consultas
+        // Criar lista de AIHs completamente excluídas para filtrar das consultas
         const aihsExcluidasIds = aihsExcluidas.map(a => a.aih_id).filter(id => id);
         const aihsExcluidasCompetencia = aihsExcluidas.filter(a => a.competencia_excluida === competencia).map(a => a.aih_id).filter(id => id);
-        
-        // Movimentações de saída excluídas (para ajustar cálculo de processamento)
-        const saidasHospitalExcluidas = movimentacoesExcluidas.filter(m => m.tipo === 'saida_hospital');
-        const saidasHospitalExcluidasCompetencia = saidasHospitalExcluidas.filter(m => m.competencia_mov === competencia);
-        const entradasSUSExcluidas = movimentacoesExcluidas.filter(m => m.tipo === 'entrada_sus');
-        const entradasSUSExcluidasCompetencia = entradasSUSExcluidas.filter(m => m.competencia_mov === competencia);
 
-        // 1. AIH em processamento na competência - considerando exclusões
-        // Lógica: AIHs da competência que NÃO tiveram saída para hospital ativa, excluindo AIHs deletadas
-        
-        // Primeiro, buscar IDs das movimentações de saída que foram excluídas especificamente da competência atual
-        const saidasExcluidasCompetencia = movimentacoesExcluidas.filter(m => 
-            m.tipo === 'saida_hospital' && 
-            (m.competencia_mov === competencia || !m.competencia_mov)
-        );
-        
+        // 1. AIH em processamento na competência 
+        // Lógica: AIHs da competência que NÃO tiveram saída para hospital, excluindo apenas AIHs completamente deletadas
         let sqlEmProcessamentoCompetencia = `
             SELECT COUNT(DISTINCT a.id) as total
             FROM aihs a
@@ -726,61 +703,15 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
             )
         `;
         
-        // Adicionar de volta AIHs que tiveram movimentações de saída excluídas (elas voltam a estar em processamento)
-        if (saidasExcluidasCompetencia.length > 0) {
-            const aihsComSaidaExcluida = saidasExcluidasCompetencia
-                .map(s => s.numero_aih)
-                .filter(aih => aih);
-            
-            if (aihsComSaidaExcluida.length > 0) {
-                // Buscar IDs das AIHs que tiveram saída excluída
-                const aihsIds = await all(`
-                    SELECT id FROM aihs 
-                    WHERE numero_aih IN (${aihsComSaidaExcluida.map(() => '?').join(',')})
-                    AND competencia = ?
-                `, [...aihsComSaidaExcluida, competencia]);
-                
-                if (aihsIds.length > 0) {
-                    sqlEmProcessamentoCompetencia += ` 
-                        OR a.id IN (${aihsIds.map(() => '?').join(',')})
-                    `;
-                }
-            }
-        }
-        
-        // Adicionar filtro para AIHs completamente excluídas se houver
+        // Filtrar apenas AIHs completamente excluídas (não movimentações individuais)
         if (aihsExcluidasCompetencia.length > 0) {
             sqlEmProcessamentoCompetencia += ` AND a.id NOT IN (${aihsExcluidasCompetencia.map(() => '?').join(',')})`;
         }
 
-        // Construir parâmetros
-        let paramsEmProcessamento = [competencia, competencia];
-        
-        // Adicionar IDs das AIHs com saída excluída (se houver)
-        if (saidasExcluidasCompetencia.length > 0) {
-            const aihsComSaidaExcluida = saidasExcluidasCompetencia
-                .map(s => s.numero_aih)
-                .filter(aih => aih);
-            
-            if (aihsComSaidaExcluida.length > 0) {
-                const aihsIds = await all(`
-                    SELECT id FROM aihs 
-                    WHERE numero_aih IN (${aihsComSaidaExcluida.map(() => '?').join(',')})
-                    AND competencia = ?
-                `, [...aihsComSaidaExcluida, competencia]);
-                
-                if (aihsIds.length > 0) {
-                    paramsEmProcessamento.push(...aihsIds.map(a => a.id));
-                }
-            }
-        }
-        
-        // Adicionar AIHs completamente excluídas
-        paramsEmProcessamento.push(...aihsExcluidasCompetencia);
-        
+        const paramsEmProcessamento = [competencia, competencia, ...aihsExcluidasCompetencia];
         const emProcessamentoCompetencia = await get(sqlEmProcessamentoCompetencia, paramsEmProcessamento, 'dashboard');
 
-        // 2. AIH finalizadas na competência (status 1 e 4) - excluindo AIHs deletadas
+        // 2. AIH finalizadas na competência (status 1 e 4) - excluindo apenas AIHs completamente excluídas
         let sqlFinalizadasCompetencia = `
             SELECT COUNT(*) as count 
             FROM aihs 
@@ -795,7 +726,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
         const paramsFinalizadas = [competencia, ...aihsExcluidasCompetencia];
         const finalizadasCompetencia = await get(sqlFinalizadasCompetencia, paramsFinalizadas, 'dashboard');
 
-        // 3. AIH com pendências/glosas na competência (status 2 e 3) - excluindo AIHs deletadas
+        // 3. AIH com pendências/glosas na competência (status 2 e 3) - excluindo apenas AIHs completamente excluídas
         let sqlComPendenciasCompetencia = `
             SELECT COUNT(*) as count 
             FROM aihs 
@@ -810,10 +741,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
         const paramsPendencias = [competencia, ...aihsExcluidasCompetencia];
         const comPendenciasCompetencia = await get(sqlComPendenciasCompetencia, paramsPendencias, 'dashboard');
 
-        // 4. Total geral em processamento (desde o início) - considerando exclusões
-        // Buscar todas as AIHs que tiveram movimentações de saída excluídas (devem voltar ao processamento)
-        const todasSaidasExcluidas = movimentacoesExcluidas.filter(m => m.tipo === 'saida_hospital');
-        
+        // 4. Total geral em processamento (desde o início) - excluindo apenas AIHs completamente excluídas
         let sqlTotalEmProcessamentoGeral = `
             SELECT COUNT(DISTINCT a.id) as count
             FROM aihs a
@@ -824,59 +752,14 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
             )
         `;
         
-        // Adicionar de volta AIHs que tiveram movimentações de saída excluídas globalmente
-        if (todasSaidasExcluidas.length > 0) {
-            const aihsComSaidaExcluidaGlobal = todasSaidasExcluidas
-                .map(s => s.numero_aih)
-                .filter(aih => aih);
-            
-            if (aihsComSaidaExcluidaGlobal.length > 0) {
-                // Buscar IDs das AIHs que tiveram saída excluída
-                const aihsIdsGlobal = await all(`
-                    SELECT id FROM aihs 
-                    WHERE numero_aih IN (${aihsComSaidaExcluidaGlobal.map(() => '?').join(',')})
-                `, aihsComSaidaExcluidaGlobal);
-                
-                if (aihsIdsGlobal.length > 0) {
-                    sqlTotalEmProcessamentoGeral += ` 
-                        OR a.id IN (${aihsIdsGlobal.map(() => '?').join(',')})
-                    `;
-                }
-            }
-        }
-        
-        // Filtrar AIHs completamente excluídas
+        // Filtrar apenas AIHs completamente excluídas
         if (aihsExcluidasIds.length > 0) {
             sqlTotalEmProcessamentoGeral += ` AND a.id NOT IN (${aihsExcluidasIds.map(() => '?').join(',')})`;
         }
 
-        // Construir parâmetros para consulta geral
-        let paramsProcessamentoGeral = [];
-        
-        // Adicionar IDs das AIHs com saída excluída globalmente
-        if (todasSaidasExcluidas.length > 0) {
-            const aihsComSaidaExcluidaGlobal = todasSaidasExcluidas
-                .map(s => s.numero_aih)
-                .filter(aih => aih);
-            
-            if (aihsComSaidaExcluidaGlobal.length > 0) {
-                const aihsIdsGlobal = await all(`
-                    SELECT id FROM aihs 
-                    WHERE numero_aih IN (${aihsComSaidaExcluidaGlobal.map(() => '?').join(',')})
-                `, aihsComSaidaExcluidaGlobal);
-                
-                if (aihsIdsGlobal.length > 0) {
-                    paramsProcessamentoGeral.push(...aihsIdsGlobal.map(a => a.id));
-                }
-            }
-        }
-        
-        // Adicionar AIHs completamente excluídas
-        paramsProcessamentoGeral.push(...aihsExcluidasIds);
-        
-        const totalEmProcessamentoGeral = await get(sqlTotalEmProcessamentoGeral, paramsProcessamentoGeral, 'dashboard');
+        const totalEmProcessamentoGeral = await get(sqlTotalEmProcessamentoGeral, aihsExcluidasIds, 'dashboard');
 
-        // Estatísticas de movimentações para contexto - ajustadas pelas exclusões
+        // Estatísticas de movimentações para contexto - não ajustadas por movimentações individuais excluídas
         const totalEntradasSUS = await get(`
             SELECT COUNT(DISTINCT aih_id) as count 
             FROM movimentacoes 
@@ -889,11 +772,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
             WHERE tipo = 'saida_hospital'
         `, [], 'dashboard');
 
-        // Ajustar estatísticas pelas movimentações excluídas
-        const totalEntradasSUSAjustado = (totalEntradasSUS.count || 0) - entradasSUSExcluidas.length;
-        const totalSaidasHospitalAjustado = (totalSaidasHospital.count || 0) - saidasHospitalExcluidas.length;
-
-        // 5. Total de AIHs finalizadas desde o início (status 1 e 4) - excluindo AIHs deletadas
+        // 5. Total de AIHs finalizadas desde o início (status 1 e 4) - excluindo apenas AIHs completamente excluídas
         let sqlTotalFinalizadasGeral = `
             SELECT COUNT(*) as count 
             FROM aihs 
@@ -906,7 +785,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
 
         const totalFinalizadasGeral = await get(sqlTotalFinalizadasGeral, aihsExcluidasIds, 'dashboard');
 
-        // 6. Total de AIHs cadastradas desde o início - excluindo AIHs deletadas
+        // 6. Total de AIHs cadastradas desde o início - excluindo apenas AIHs completamente excluídas
         let sqlTotalAIHsGeral = `
             SELECT COUNT(*) as count 
             FROM aihs
@@ -918,7 +797,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
 
         const totalAIHsGeral = await get(sqlTotalAIHsGeral, aihsExcluidasIds, 'dashboard');
 
-        // Dados adicionais para contexto - ajustados
+        // Dados adicionais para contexto
         let sqlTotalAIHsCompetencia = `
             SELECT COUNT(*) as count 
             FROM aihs 
@@ -931,7 +810,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
 
         const totalAIHsCompetencia = await get(sqlTotalAIHsCompetencia, [competencia, ...aihsExcluidasCompetencia], 'dashboard');
 
-        // Lista de competências disponíveis (não afetada por exclusões - apenas AIHs ainda existentes)
+        // Lista de competências disponíveis - apenas AIHs ainda existentes
         let sqlCompetenciasDisponiveis = `
             SELECT DISTINCT competencia 
             FROM aihs 
@@ -947,7 +826,7 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
 
         const competenciasDisponiveis = await all(sqlCompetenciasDisponiveis, aihsExcluidasIds, 'dashboard');
 
-        // Estatísticas de valores para a competência - ajustadas
+        // Estatísticas de valores para a competência
         let sqlValoresGlosasPeriodo = `
             SELECT 
                 SUM(valor_inicial) as valor_inicial_total,
@@ -973,27 +852,24 @@ app.get('/api/dashboard', verificarToken, async (req, res) => {
             com_pendencias_competencia: comPendenciasCompetencia.count || 0,
             total_aihs_competencia: totalAIHsCompetencia.count || 0,
 
-            // Métricas gerais (desde o início, ajustadas por exclusões)
-            total_entradas_sus: totalEntradasSUSAjustado,
-            total_saidas_hospital: totalSaidasHospitalAjustado,
+            // Métricas gerais (desde o início)
+            total_entradas_sus: totalEntradasSUS.count || 0,
+            total_saidas_hospital: totalSaidasHospital.count || 0,
             total_em_processamento_geral: totalEmProcessamentoGeral.count || 0,
             total_finalizadas_geral: totalFinalizadasGeral.count || 0,
             total_aihs_geral: totalAIHsGeral.count || 0,
 
-            // Valores financeiros da competência (ajustados)
+            // Valores financeiros da competência
             valores_competencia: {
                 inicial: valoresGlosasPeriodo.valor_inicial_total || 0,
                 atual: valoresGlosasPeriodo.valor_atual_total || 0,
                 media_glosa: valoresGlosasPeriodo.media_glosa || 0
             },
 
-            // Informações sobre exclusões (para transparência)
+            // Informações sobre exclusões (apenas AIHs completamente excluídas)
             exclusoes_consideradas: {
                 aihs_excluidas_total: aihsExcluidasIds.length,
-                aihs_excluidas_competencia: aihsExcluidasCompetencia.length,
-                movimentacoes_excluidas_total: movimentacoesExcluidas.length,
-                entradas_sus_excluidas: entradasSUSExcluidas.length,
-                saidas_hospital_excluidas: saidasHospitalExcluidas.length
+                aihs_excluidas_competencia: aihsExcluidasCompetencia.length
             }
         });
     } catch (err) {

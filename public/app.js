@@ -513,13 +513,28 @@ const carregarDashboard = async (competenciaSelecionada = null) => {
         // Sempre atualizar o conteúdo do seletor
         seletorContainer.innerHTML = `
             <div class="seletor-competencia">
-                <label for="selectCompetencia">Competência:</label>
-                <select id="selectCompetencia" onchange="carregarDashboard(this.value)">
-                    ${dados.competencias_disponiveis.map(comp => 
-                        `<option value="${comp}" ${comp === competencia ? 'selected' : ''}>${comp}</option>`
-                    ).join('')}
-                </select>
-                <span class="competencia-info">📅 Visualizando dados de ${competencia}</span>
+                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <label for="selectCompetencia" style="margin: 0;">Competência:</label>
+                    <select id="selectCompetencia" onchange="carregarDashboard(this.value)">
+                        ${dados.competencias_disponiveis.map(comp => 
+                            `<option value="${comp}" ${comp === competencia ? 'selected' : ''}>${comp}</option>`
+                        ).join('')}
+                    </select>
+                    <button onclick="atualizarDashboardManual()" id="btnAtualizarDashboard" 
+                            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+                                   color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; 
+                                   cursor: pointer; font-weight: 500; transition: all 0.2s ease;
+                                   display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"
+                            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        <span id="iconAtualizarDashboard">🔄</span>
+                        <span id="textoAtualizarDashboard">Atualizar Agora</span>
+                    </button>
+                    <span class="competencia-info">📅 Visualizando dados de ${competencia}</span>
+                </div>
+                <div id="statusAtualizacao" style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b; text-align: center; min-height: 20px;">
+                    <span id="ultimaAtualizacao">Última atualização: ${new Date().toLocaleTimeString('pt-BR')}</span>
+                </div>
             </div>
         `;
 
@@ -2010,6 +2025,111 @@ window.visualizarAIH = async (numeroAIH) => {
         mostrarInfoAIH(aih);
     } catch (err) {
         alert('Erro ao carregar AIH: ' + err.message);
+    }
+};
+
+// Função para atualização manual do dashboard
+window.atualizarDashboardManual = async () => {
+    try {
+        console.log('🔄 Iniciando atualização manual do dashboard...');
+        
+        // Elementos do botão e status
+        const botao = document.getElementById('btnAtualizarDashboard');
+        const icone = document.getElementById('iconAtualizarDashboard');
+        const texto = document.getElementById('textoAtualizarDashboard');
+        const status = document.getElementById('statusAtualizacao');
+        const ultimaAtualizacao = document.getElementById('ultimaAtualizacao');
+        
+        if (!botao || !icone || !texto || !status) {
+            console.error('Elementos do botão de atualização não encontrados');
+            return;
+        }
+        
+        // Desabilitar botão e mostrar loading
+        botao.disabled = true;
+        botao.style.opacity = '0.7';
+        botao.style.cursor = 'not-allowed';
+        icone.textContent = '⏳';
+        texto.textContent = 'Atualizando...';
+        
+        // Mostrar status de carregamento
+        status.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: #3b82f6;">
+                <div style="width: 12px; height: 12px; border: 2px solid #3b82f6; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <span>Buscando dados atualizados...</span>
+            </div>
+        `;
+        
+        // Pegar competência atual selecionada
+        const selectCompetencia = document.getElementById('selectCompetencia');
+        const competenciaAtual = selectCompetencia ? selectCompetencia.value : getCompetenciaAtual();
+        
+        // Limpar cache para garantir dados frescos
+        console.log('🧹 Limpando cache para garantir dados atualizados...');
+        
+        // Recarregar dashboard com dados frescos
+        await carregarDashboard(competenciaAtual);
+        
+        // Mostrar feedback de sucesso
+        status.innerHTML = `
+            <div style="color: #10b981; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <span>✅</span>
+                <span>Dashboard atualizado com sucesso!</span>
+            </div>
+        `;
+        
+        // Atualizar timestamp
+        if (ultimaAtualizacao) {
+            ultimaAtualizacao.textContent = `Última atualização: ${new Date().toLocaleTimeString('pt-BR')}`;
+        }
+        
+        // Voltar ao estado normal após 2 segundos
+        setTimeout(() => {
+            if (botao && icone && texto && status) {
+                botao.disabled = false;
+                botao.style.opacity = '1';
+                botao.style.cursor = 'pointer';
+                icone.textContent = '🔄';
+                texto.textContent = 'Atualizar Agora';
+                
+                // Voltar ao timestamp simples
+                status.innerHTML = `<span id="ultimaAtualizacao">Última atualização: ${new Date().toLocaleTimeString('pt-BR')}</span>`;
+            }
+        }, 2000);
+        
+        console.log('✅ Atualização manual do dashboard concluída');
+        
+    } catch (error) {
+        console.error('❌ Erro na atualização manual do dashboard:', error);
+        
+        // Elementos do botão e status
+        const botao = document.getElementById('btnAtualizarDashboard');
+        const icone = document.getElementById('iconAtualizarDashboard');
+        const texto = document.getElementById('textoAtualizarDashboard');
+        const status = document.getElementById('statusAtualizacao');
+        
+        // Mostrar erro
+        if (status) {
+            status.innerHTML = `
+                <div style="color: #ef4444; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <span>❌</span>
+                    <span>Erro ao atualizar. Tente novamente.</span>
+                </div>
+            `;
+        }
+        
+        // Voltar ao estado normal após 3 segundos
+        setTimeout(() => {
+            if (botao && icone && texto && status) {
+                botao.disabled = false;
+                botao.style.opacity = '1';
+                botao.style.cursor = 'pointer';
+                icone.textContent = '🔄';
+                texto.textContent = 'Atualizar Agora';
+                
+                status.innerHTML = `<span id="ultimaAtualizacao">Última atualização: ${new Date().toLocaleTimeString('pt-BR')}</span>`;
+            }
+        }, 3000);
     }
 };
 

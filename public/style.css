@@ -481,6 +481,37 @@ header h2 {
     100% { transform: rotate(360deg); }
 }
 
+/* Animação para botão de atualização */
+#btnAtualizarDashboard:hover #iconAtualizarDashboard {
+    animation: spin 0.5s ease-in-out;
+}
+
+#btnAtualizarDashboard:disabled {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Responsividade para controles do dashboard */
+@media (max-width: 768px) {
+    .seletor-competencia > div {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 1rem;
+    }
+
+    .seletor-competencia label,
+    .seletor-competencia select,
+    .seletor-competencia button {
+        width: 100%;
+        text-align: center;
+    }
+
+    .competencia-info {
+        text-align: center;
+        margin-top: 0.5rem;
+    }
+}
+
 /* Resumo Financeiro */
 .resumo-financeiro {
     background: var(--white);
@@ -1015,6 +1046,7 @@ button:hover {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+```text
 }
 
 .relatorio-card:hover {
@@ -1120,11 +1152,11 @@ button:hover {
     .relatorios-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .relatorios-periodo-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .filtros-periodo {
         grid-template-columns: 1fr;
     }
@@ -2026,8 +2058,7 @@ tr:last-child {
 .profissional-grupo label {
     font-weight: 600;
     color: #374151;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
+    margin-bottom: 0.5rem;    font-size: 0.875rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;

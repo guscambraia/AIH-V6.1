@@ -404,7 +404,7 @@ const clearExpiredCache = () => {
 // Determinar configuração de cache baseada na consulta
 const getCacheConfig = (key) => {
     if (key.includes('dashboard') || key.includes('COUNT') || key.includes('SUM')) {
-        return CACHE_CONFIG.dashboard;
+        return { ttl: 1 * 60 * 1000, maxSize: 500 }; // 1 min para dashboard
     }
     if (key.includes('relatório') || key.includes('GROUP BY') || key.includes('JOIN')) {
         return CACHE_CONFIG.report;

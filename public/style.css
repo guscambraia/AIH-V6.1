@@ -1045,9 +1045,7 @@ button:hover {
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 2Code changes applied to correct the alignment of the 'Quantidade' title in the glosas table.
-
-```text
+    box-shadow: 0 2Code changes applied to correct the alignment of the 'Quantidade' title in the glosas table.```text
 px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -2059,7 +2057,8 @@ tr:last-child {
 
 .profissional-grupo label {
     font-weight: 600;
-    color: #374151;
+    color:```text
+ #374151;
     margin-bottom: 0.5rem;    font-size: 0.875rem;
     display: flex;
     align-items: center;

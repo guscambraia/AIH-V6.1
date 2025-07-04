@@ -83,7 +83,7 @@ const mostrarTela = (telaId) => {
         tela.classList.remove('ativa');
     });
     document.getElementById(telaId).classList.add('ativa');
-    
+
     // Controlar atualização automática baseado na tela
     if (telaId === 'telaPrincipal') {
         // Iniciar atualização automática ao entrar na tela principal
@@ -99,7 +99,7 @@ const mostrarTela = (telaId) => {
 const voltarTelaPrincipal = () => {
     mostrarTela('telaPrincipal');
     carregarDashboard();
-    
+
     // Limpar campo da AIH se estiver na tela de informar AIH
     setTimeout(() => {
         const campoNumeroAIH = document.getElementById('numeroBuscarAIH');
@@ -311,7 +311,7 @@ document.getElementById('formLoginAdmin').addEventListener('submit', async (e) =
 window.voltarLogin = () => {
     // Parar atualização automática ao voltar para login
     pararAtualizacaoAutomatica();
-    
+
     state.token = null;
     state.admin = null;
     state.usuario = null;
@@ -444,7 +444,7 @@ document.getElementById('formAlterarSenhaAdmin').addEventListener('submit', asyn
 document.getElementById('btnSair').addEventListener('click', () => {
     // Parar atualização automática ao fazer logout
     pararAtualizacaoAutomatica();
-    
+
     state.token = null;
     state.usuario = null;
     state.admin = null;
@@ -458,7 +458,7 @@ const getStatusDescricao = (status) => {
     const descricoes = {
         1: '✅ Finalizada - Aprovação Direta (SUS aprovado)',
         2: '🔄 Ativa - Aprovação Indireta (Aguardando hospital)',
-        3: '⚠️ Ativa - Em Discussão (Divergências identificadas)',
+        3: '⚠️ Ativa - Em Discussão (Divergências identificadas ou aguardando análise Auditoria SUS)',
         4: '✅ Finalizada - Após Discussão (Resolvida)'
     };
     return descricoes[status] || '❓ Status Desconhecido';
@@ -668,7 +668,7 @@ const carregarDashboard = async (competenciaSelecionada = null) => {
             error: err.message,
             stack: err.stack
         });
-        
+
         // Mostrar mensagem de erro no dashboard
         const dashboardElement = document.querySelector('.dashboard');
         if (dashboardElement) {
@@ -691,7 +691,7 @@ const iniciarAtualizacaoAutomatica = () => {
     if (intervaloDashboard) {
         clearInterval(intervaloDashboard);
     }
-    
+
     // Configurar novo intervalo para atualizar a cada 30 segundos
     intervaloDashboard = setInterval(async () => {
         try {
@@ -699,21 +699,21 @@ const iniciarAtualizacaoAutomatica = () => {
             const telaPrincipal = document.getElementById('telaPrincipal');
             if (telaPrincipal && telaPrincipal.classList.contains('ativa')) {
                 console.log('🔄 Atualizando dashboard automaticamente...');
-                
+
                 // Pegar competência atual selecionada
                 const selectCompetencia = document.getElementById('selectCompetencia');
                 const competenciaAtual = selectCompetencia ? selectCompetencia.value : getCompetenciaAtual();
-                
+
                 // Recarregar dashboard com a competência atual
                 await carregarDashboard(competenciaAtual);
-                
+
                 console.log('✅ Dashboard atualizado automaticamente');
             }
         } catch (error) {
             console.error('❌ Erro na atualização automática:', error);
         }
     }, 30000); // 30 segundos
-    
+
     console.log('🔄 Atualização automática do dashboard iniciada (30s)');
 };
 
@@ -795,7 +795,7 @@ const carregarDadosMovimentacao = async () => {
 
                     if (mov.prof_bucomaxilo) {
                         const selectBucomaxilo = document.getElementById('movProfBucomaxilo');
-                        if (selectBucomaxilo) {
+                        if (selectBucomaxilo) {```text
                             selectBucomaxilo.value = mov.prof_bucomaxilo;
                         }
                     }
@@ -1171,7 +1171,7 @@ document.getElementById('btnBuscarAIH').addEventListener('click', () => {
 
 document.getElementById('btnBackup').addEventListener('click', async () => {
     const modal = document.getElementById('modal');
-    
+
     if (!modal) {
         console.error('Modal não encontrado');
         // Se não existir modal, chamar backup diretamente
@@ -1180,14 +1180,14 @@ document.getElementById('btnBackup').addEventListener('click', async () => {
     }
 
     const modalContent = modal.querySelector('.modal-content');
-    
+
     if (!modalContent) {
         console.error('Modal content não encontrado');
         // Se não existir modal content, chamar backup diretamente
         await fazerBackup();
         return;
     }
-    
+
     modalContent.innerHTML = `
         <h3>💾 Backup da Base de Dados</h3>
         <p style="margin-bottom: 2rem; color: #64748b;">Faça o backup completo do banco de dados do sistema:</p>
@@ -1261,10 +1261,10 @@ document.getElementById('formBuscarAIH').addEventListener('submit', async (e) =>
 
         // Definir tela anterior para poder voltar
         state.telaAnterior = 'telaInformarAIH';
-        
+
         // Limpar campo antes de navegar
         document.getElementById('numeroBuscarAIH').value = '';
-        
+
         mostrarInfoAIH(aih);
     } catch (err) {
         if (err.message.includes('não encontrada')) {
@@ -1272,10 +1272,10 @@ document.getElementById('formBuscarAIH').addEventListener('submit', async (e) =>
             document.getElementById('cadastroNumeroAIH').value = numero;
             document.getElementById('cadastroNumeroAIH').removeAttribute('readonly');
             state.telaAnterior = 'telaInformarAIH';
-            
+
             // Limpar campo antes de navegar
             document.getElementById('numeroBuscarAIH').value = '';
-            
+
             mostrarTela('telaCadastroAIH');
             // Garantir que sempre tenha pelo menos um campo de atendimento
             setTimeout(garantirCampoAtendimento, 100);
@@ -1409,2259 +1409,8 @@ document.addEventListener('DOMContentLoaded', () => {
 window.fazerBackup = async () => {
     try {
         console.log('🔄 Iniciando backup do banco de dados...');
-        
-        // Verificar se há token válido
-        if (!state.token) {
-            console.error('❌ Token não encontrado no state:', state);
-            alert('❌ Erro: Usuário não autenticado. Faça login novamente.');
-            return;
-        }
 
-        console.log('✅ Token encontrado, continuando com backup...');
-
-        // Criar modal temporário para loading se não existir
-        let modalTemporario = false;
-        let modal = document.getElementById('modal');
-        
-        if (!modal) {
-            console.log('📦 Modal não encontrado, criando modal temporário...');
-            modal = document.createElement('div');
-            modal.id = 'modal-backup-temp';
-            modal.className = 'modal ativo';
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-                background: rgba(0,0,0,0.7); display: flex; align-items: center; 
-                justify-content: center; z-index: 9999;
-            `;
-            modal.innerHTML = `
-                <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; min-width: 300px;">
-                    <h3 style="color: #0369a1; margin-bottom: 1rem;">💾 Fazendo Backup...</h3>
-                    <p style="color: #64748b; margin-bottom: 1.5rem;">Aguarde enquanto o backup é criado...</p>
-                    <div style="border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            modalTemporario = true;
-        } else {
-            console.log('✅ Modal encontrado, exibindo loading...');
-            const modalContent = modal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.innerHTML = `
-                    <h3>💾 Fazendo Backup...</h3>
-                    <p>Aguarde enquanto o backup do banco de dados é criado...</p>
-                    <div style="text-align: center; margin: 2rem 0;">
-                        <div style="border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-                    </div>
-                    <p style="font-size: 0.875rem; color: #64748b; text-align: center;">Isso pode levar alguns segundos...</p>
-                `;
-            }
-            modal.classList.add('ativo');
-        }
-
-        // Fazer requisição para backup
-        console.log('📡 Fazendo requisição para /api/backup...');
-        console.log('🔑 Token sendo usado:', state.token.substring(0, 20) + '...');
-        
-        const response = await fetch('/api/backup', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${state.token}`
-            }
-        });
-
-        console.log(`📡 Resposta recebida: Status ${response.status}`);
-        console.log(`📡 Headers da resposta:`, {
-            contentType: response.headers.get('content-type'),
-            contentDisposition: response.headers.get('content-disposition'),
-            contentLength: response.headers.get('content-length')
-        });
-
-        if (!response.ok) {
-            let errorText;
-            try {
-                errorText = await response.text();
-            } catch (e) {
-                errorText = `Erro ao ler resposta: ${e.message}`;
-            }
-            console.error('❌ Erro na resposta do servidor:', {
-                status: response.status,
-                statusText: response.statusText,
-                errorText: errorText
-            });
-            throw new Error(`Erro HTTP ${response.status}: ${response.statusText} - ${errorText}`);
-        }
-
-        // Verificar content-type da resposta
-        const contentType = response.headers.get('content-type');
-        console.log('📄 Content-Type da resposta:', contentType);
-
-        // Aceitar tanto application/octet-stream quanto outros tipos de arquivo
-        if (contentType && contentType.includes('application/json')) {
-            const errorData = await response.json();
-            console.error('❌ Servidor retornou JSON ao invés de arquivo:', errorData);
-            throw new Error(errorData.error || 'Servidor retornou erro ao invés de arquivo de backup');
-        }
-
-        // Criar blob e fazer download
-        console.log('💾 Criando blob para download...');
-        const blob = await response.blob();
-        
-        if (blob.size === 0) {
-            throw new Error('Arquivo de backup está vazio');
-        }
-        
-        console.log(`💾 Blob criado com tamanho: ${blob.size} bytes`);
-
-        // Criar link de download
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        
-        // Definir nome do arquivo
-        const dataAtual = new Date().toISOString().split('T')[0];
-        link.download = `backup-aih-${dataAtual}.db`;
-        
-        // Configurar link invisível
-        link.style.display = 'none';
-        link.style.visibility = 'hidden';
-
-        // Adicionar ao DOM temporariamente
-        document.body.appendChild(link);
-        
-        // Forçar clique
-        console.log('🖱️ Iniciando download...');
-        link.click();
-        
-        // Limpar recursos
-        setTimeout(() => {
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-            console.log('🧹 Recursos de download limpos');
-        }, 100);
-
-        console.log('✅ Download do backup iniciado com sucesso');
-
-        // Fechar modal
-        if (modalTemporario) {
-            document.body.removeChild(modal);
-        } else if (modal) {
-            modal.classList.remove('ativo');
-        }
-        
-        // Mostrar mensagem de sucesso
-        alert('✅ Backup do banco de dados realizado com sucesso!\n\nO arquivo SQLite foi baixado e contém todos os dados do sistema.');
-
-    } catch (err) {
-        console.error('❌ Erro completo ao fazer backup:', {
-            message: err.message,
-            stack: err.stack,
-            token: state.token ? `Presente (${state.token.length} chars)` : 'Ausente',
-            url: window.location.href,
-            userAgent: navigator.userAgent
-        });
-        
-        // Fechar modal adequadamente
-        if (modalTemporario && modal && modal.parentNode) {
-            document.body.removeChild(modal);
-        } else {
-            const modalExistente = document.getElementById('modal');
-            if (modalExistente) {
-                modalExistente.classList.remove('ativo');
-            }
-        }
-        
-        // Mostrar erro detalhado
-        alert(`❌ Erro ao fazer backup: ${err.message}\n\nDetalhes técnicos foram registrados no console.`);
-    }
-};
-
-
-
-// Busca rápida por AIH
-window.buscarPorAIH = async () => {
-    const numeroAIH = document.getElementById('buscaRapidaAIH').value.trim();
-
-    if (!numeroAIH) {
-        alert('Por favor, digite o número da AIH');
-        return;
-    }
-
-    // Mostrar indicador de carregamento
-    const botao = document.querySelector('.busca-card button');
-    const textoOriginal = botao.textContent;
-    botao.textContent = 'Buscando...';
-    botao.disabled = true;
-
-    try {
-        const aih = await api(`/aih/${numeroAIH}`);
-        state.aihAtual = aih;
-
-        // **NOVO**: Limpar campo automaticamente após busca bem-sucedida
-        document.getElementById('buscaRapidaAIH').value = '';
-
-        if (aih.status === 1 || aih.status === 4) {
-            const continuar = await mostrarModal(
-                'AIH Finalizada',
-                'Esta AIH está finalizada. É uma reassinatura/reapresentação?'
-            );
-
-            if (!continuar) {
-                return;
-            }
-        }
-
-        state.telaAnterior = 'telaPesquisa';
-        mostrarInfoAIH(aih);
-    } catch (err) {
-        if (err.message.includes('não encontrada')) {
-            const cadastrar = confirm(`AIH ${numeroAIH} não encontrada. Deseja cadastrá-la?`);
-            if (cadastrar) {
-                // **NOVO**: Limpar campo antes de navegar para cadastro
-                document.getElementById('buscaRapidaAIH').value = '';
-                document.getElementById('cadastroNumeroAIH').value = numeroAIH;
-                state.telaAnterior = 'telaPesquisa';
-                mostrarTela('telaCadastroAIH');
-                setTimeout(garantirCampoAtendimento, 100);
-            } else {
-                document.getElementById('buscaRapidaAIH').value = '';
-            }
-        } else{
-            alert('Erro ao buscar AIH: ' + err.message);
-            console.error('Erro detalhado:', err);
-        }
-    } finally {
-        // Restaurar botão
-        botao.textContent = textoOriginal;
-        botao.disabled = false;
-    }
-};
-
-// Busca por número de atendimento
-window.buscarPorAtendimento = async () => {
-    const numeroAtendimento = document.getElementById('buscaRapidaAtendimento').value.trim();
-
-    if (!numeroAtendimento) {
-        alert('Por favor, digite o número do atendimento');
-        return;
-    }
-
-    // Mostrar indicador de carregamento
-    const botoes = document.querySelectorAll('.busca-card button');
-    const botaoAtendimento = botoes[1]; // Segundo botão
-    const textoOriginal = botaoAtendimento.textContent;
-    botaoAtendimento.textContent = 'Buscando...';
-    botaoAtendimento.disabled = true;
-
-    try {
-        const response = await api('/pesquisar', {
-            method: 'POST',
-            body: JSON.stringify({
-                filtros: {
-                    numero_atendimento: numeroAtendimento
-                }
-            })
-        });
-
-        console.log('Resposta da busca por atendimento:', response);
-
-        if (response.resultados && response.resultados.length > 0) {
-            exibirResultadosPesquisa(response.resultados);
-            // **REMOVIDO**: Campo será limpo automaticamente pela função exibirResultadosPesquisa
-        } else {
-            alert('Nenhuma AIH encontrada com este número de atendimento');
-            // **NOVO**: Limpar campo mesmo quando não encontrar resultados
-            document.getElementById('buscaRapidaAtendimento').value = '';
-            // Limpar container de resultados
-            const container = document.getElementById('resultadosPesquisa');
-            if (container) {
-                container.innerHTML = '<p style="text-align: center; color: #64748b; padding: 2rem;">Nenhum resultado encontrado</p>';
-            }
-        }
-    } catch (err) {
-        alert('Erro ao buscar por atendimento: ' + err.message);
-        console.error('Erro detalhado:', err);
-        // **NOVO**: Limpar campo em caso de erro
-        document.getElementById('buscaRapidaAtendimento').value = '';
-        // Limpar container de resultados em caso de erro
-        const container = document.getElementById('resultadosPesquisa');
-        if (container) {
-            container.innerHTML = '<p style="text-align: center; color: #ef4444; padding: 2rem;">Erro na pesquisa. Tente novamente.</p>';
-        }
-    } finally {
-        // Restaurar botão
-        botaoAtendimento.textContent = textoOriginal;
-        botaoAtendimento.disabled = false;
-    }
-};
-
-// Sistema de paginação e ordenação para resultados
-let sistemaResultados = {
-    dados: [],
-    dadosOrdenados: [],
-    paginaAtual: 1,
-    itensPorPagina: 10,
-    colunaOrdenacao: null,
-    direcaoOrdenacao: 'asc', // 'asc' ou 'desc'
-    titulo: 'Resultados da Pesquisa',
-    descricao: ''
-};
-
-// Função para exibir resultados da pesquisa com paginação e ordenação
-const exibirResultadosPesquisa = (resultados, titulo = 'Resultados da Pesquisa', descricao = '') => {
-    const container = document.getElementById('resultadosPesquisa');
-
-    if (!container) {
-        console.error('Container de resultados não encontrado');
-        return;
-    }
-
-    // **NOVO**: Limpar automaticamente os campos de busca sempre que resultados são exibidos
-    limparCamposBuscaRapida();
-
-    if (!resultados || resultados.length === 0) {
-        container.innerHTML = `
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2rem; text-align: center; margin-top: 2rem;">
-                <h3 style="color: #64748b; margin-bottom: 1rem;">📭 Nenhum resultado encontrado</h3>
-                <p style="color: #64748b;">Tente ajustar os critérios de busca ou verifique se os dados estão corretos.</p>
-            </div>
-        `;
-        return;
-    }
-
-    // Armazenar resultados globalmente para exportação e controle
-    window.ultimosResultadosPesquisa = resultados;
-    sistemaResultados.dados = resultados;
-    sistemaResultados.dadosOrdenados = [...resultados];
-    sistemaResultados.titulo = titulo;
-    sistemaResultados.descricao = descricao;
-    sistemaResultados.paginaAtual = 1;
-
-    renderizarTabela();
-};
-
-// Função para renderizar a tabela com paginação
-const renderizarTabela = () => {
-    const container = document.getElementById('resultadosPesquisa');
-    const totalItens = sistemaResultados.dadosOrdenados.length;
-    const totalPaginas = Math.ceil(totalItens / sistemaResultados.itensPorPagina);
-    const inicio = (sistemaResultados.paginaAtual - 1) * sistemaResultados.itensPorPagina;
-    const fim = inicio + sistemaResultados.itensPorPagina;
-    const itensPagina = sistemaResultados.dadosOrdenados.slice(inicio, fim);
-
-    container.innerHTML = `
-        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 1.5rem; margin-top: 2rem;">
-            <!-- Cabeçalho com título e controles -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <h3 style="color: #0369a1; margin: 0 0 0.5rem 0;">${sistemaResultados.titulo}</h3>
-                    ${sistemaResultados.descricao ? `<p style="color: #0369a1; margin: 0; font-size: 0.9rem; font-style: italic;">${sistemaResultados.descricao}</p>` : ''}
-                    <p style="color: #0284c7; margin: 0.5rem 0 0 0; font-weight: 600;">
-                        Total: ${totalItens} AIH${totalItens !== 1 ? 's' : ''} | 
-                        Página ${sistemaResultados.paginaAtual} de ${totalPaginas} | 
-                        Exibindo ${itensPagina.length} itens
-                    </p>
-                </div>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: flex-start;">
-                    <button onclick="voltarTelaPrincipal()" style="padding: 0.5rem 1rem; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem;">
-                        ← Dashboard
-                    </button>
-                    <button onclick="exportarResultadosPesquisa('csv')" class="btn-success" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                        📄 CSV
-                    </button>
-                    <button onclick="exportarResultadosPesquisa('excel')" class="btn-success" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                        📊 Excel
-                    </button>
-                    <button onclick="limparResultados()" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                        🗑️ Limpar
-                    </button>
-                </div>
-            </div>
-
-            <!-- Controles de paginação superiores -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label style="font-weight: 500; color: #374151;">Itens por página:</label>
-                    <select onchange="alterarItensPorPagina(this.value)" style="padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; background: white;">
-                        <option value="5" ${sistemaResultados.itensPorPagina === 5 ? 'selected' : ''}>5</option>
-                        <option value="10" ${sistemaResultados.itensPorPagina === 10 ? 'selected' : ''}>10</option>
-                        <option value="25" ${sistemaResultados.itensPorPagina === 25 ? 'selected' : ''}>25</option>
-                        <option value="50" ${sistemaResultados.itensPorPagina === 50 ? 'selected' : ''}>50</option>
-                        <option value="100" ${sistemaResultados.itensPorPagina === 100 ? 'selected' : ''}>100</option>
-                        <option value="${totalItens}">Todos (${totalItens})</option>
-                    </select>
-                </div>
-                
-                ${gerarControlesPaginacao()}
-            </div>
-
-            <!-- Tabela de resultados -->
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <thead>
-                        <tr style="background: #f1f5f9;">
-                            <th onclick="ordenarPorColuna('numero_aih')" style="padding: 1rem; text-align: left; font-weight: 600; color: #334155; border-bottom: 1px solid #e2e8f0; cursor: pointer; user-select: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">
-                                AIH ${getIndicadorOrdenacao('numero_aih')}
-                            </th>
-                            <th onclick="ordenarPorColuna('status')" style="padding: 1rem; text-align: left; font-weight: 600; color: #334155; border-bottom: 1px solid #e2e8f0; cursor: pointer; user-select: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">
-                                Status ${getIndicadorOrdenacao('status')}
-                            </th>
-                            <th onclick="ordenarPorColuna('competencia')" style="padding: 1rem; text-align: left; font-weight: 600; color: #334155; border-bottom: 1px solid #e2e8f0; cursor: pointer; user-select: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">
-                                Competência ${getIndicadorOrdenacao('competencia')}
-                            </th>
-                            <th onclick="ordenarPorColuna('valor_inicial')" style="padding: 1rem; text-align: left; font-weight: 600; color: #334155; border-bottom: 1px solid #e2e8f0; cursor: pointer; user-select: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">
-                                Valor Inicial ${getIndicadorOrdenacao('valor_inicial')}
-                            </th>
-                            <th onclick="ordenarPorColuna('valor_atual')" style="padding: 1rem; text-align: left; font-weight: 600; color: #334155; border-bottom: 1px solid #e2e8f0; cursor: pointer; user-select: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">
-                                Valor Atual ${getIndicadorOrdenacao('valor_atual')}
-                            </th>
-                            <th onclick="ordenarPorColuna('total_glosas')" style="padding: 1rem; text-align: left; font-weight: 600; color: #334155; border-bottom: 1px solid #e2e8f0; cursor: pointer; user-select: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">
-                                Glosas ${getIndicadorOrdenacao('total_glosas')}
-                            </th>
-                            <th onclick="ordenarPorColuna('criado_em')" style="padding: 1rem; text-align: left; font-weight: 600; color: #334155; border-bottom: 1px solid #e2e8f0; cursor: pointer; user-select: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">
-                                Data ${getIndicadorOrdenacao('criado_em')}
-                            </th>
-                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: #334155; border-bottom: 1px solid #e2e8f0;">
-                                Ações
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${itensPagina.map((aih, index) => `
-                            <tr style="border-bottom: 1px solid #f1f5f9; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='white'">
-                                <td style="padding: 1rem; font-weight: 500; color: #1e293b;">${aih.numero_aih || 'N/A'}</td>
-                                <td style="padding: 1rem;"><span class="status-badge status-${aih.status}">${getStatusDescricao(aih.status)}</span></td>
-                                <td style="padding: 1rem; color: #64748b;">${aih.competencia || 'N/A'}</td>
-                                <td style="padding: 1rem; color: #059669; font-weight: 500;">R$ ${(aih.valor_inicial || 0).toFixed(2)}</td>
-                                <td style="padding: 1rem; color: ${(aih.valor_atual < aih.valor_inicial) ? '#dc2626' : '#059669'}; font-weight: 500;">R$ ${(aih.valor_atual || 0).toFixed(2)}</td>
-                                <td style="padding: 1rem; text-align: center;">
-                                    <span style="background: ${(aih.total_glosas > 0) ? '#fef3c7' : '#f0fdf4'}; color: ${(aih.total_glosas > 0) ? '#92400e' : '#166534'}; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500;">
-                                        ${aih.total_glosas || 0}
-                                    </span>
-                                </td>
-                                <td style="padding: 1rem; color: #64748b; font-size: 0.875rem;">${new Date(aih.criado_em).toLocaleDateString('pt-BR')}</td>
-                                <td style="padding: 1rem;">
-                                    <button onclick="visualizarAIH('${aih.numero_aih}')" 
-                                            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
-                                                   color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; 
-                                                   cursor: pointer; font-weight: 500; transition: all 0.2s;">
-                                        👁️ Ver Detalhes
-                                    </button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Controles de paginação inferiores -->
-            ${totalPaginas > 1 ? `
-                <div style="display: flex; justify-content: center; margin-top: 1rem;">
-                    ${gerarControlesPaginacao()}
-                </div>
-            ` : ''}
-
-            <!-- Informações adicionais -->
-            <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 6px; font-size: 0.875rem; color: #64748b;">
-                💡 <strong>Dicas:</strong> Clique nos cabeçalhos das colunas para ordenar • Use os controles de paginação para navegar • Ajuste quantos itens ver por página
-            </div>
-        </div>
-    `;
-};
-
-// Função para gerar controles de paginação
-const gerarControlesPaginacao = () => {
-    const totalItens = sistemaResultados.dadosOrdenados.length;
-    const totalPaginas = Math.ceil(totalItens / sistemaResultados.itensPorPagina);
-    
-    if (totalPaginas <= 1) return '';
-
-    let controles = `
-        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-            <button onclick="irParaPagina(1)" ${sistemaResultados.paginaAtual === 1 ? 'disabled' : ''} 
-                    style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; background: ${sistemaResultados.paginaAtual === 1 ? '#f9fafb' : 'white'}; color: ${sistemaResultados.paginaAtual === 1 ? '#9ca3af' : '#374151'}; border-radius: 4px; cursor: ${sistemaResultados.paginaAtual === 1 ? 'not-allowed' : 'pointer'};">
-                ⏮️ Primeira
-            </button>
-            
-            <button onclick="irParaPagina(${sistemaResultados.paginaAtual - 1})" ${sistemaResultados.paginaAtual === 1 ? 'disabled' : ''} 
-                    style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; background: ${sistemaResultados.paginaAtual === 1 ? '#f9fafb' : 'white'}; color: ${sistemaResultados.paginaAtual === 1 ? '#9ca3af' : '#374151'}; border-radius: 4px; cursor: ${sistemaResultados.paginaAtual === 1 ? 'not-allowed' : 'pointer'};">
-                ⏪ Anterior
-            </button>
-    `;
-
-    // Páginas numeradas (mostrar no máximo 7 páginas)
-    let inicioRange = Math.max(1, sistemaResultados.paginaAtual - 3);
-    let fimRange = Math.min(totalPaginas, sistemaResultados.paginaAtual + 3);
-
-    if (fimRange - inicioRange < 6) {
-        if (inicioRange === 1) {
-            fimRange = Math.min(totalPaginas, inicioRange + 6);
-        } else {
-            inicioRange = Math.max(1, fimRange - 6);
-        }
-    }
-
-    for (let i = inicioRange; i <= fimRange; i++) {
-        controles += `
-            <button onclick="irParaPagina(${i})" 
-                    style="padding: 0.5rem 0.75rem; border: 1px solid ${i === sistemaResultados.paginaAtual ? '#3b82f6' : '#d1d5db'}; 
-                           background: ${i === sistemaResultados.paginaAtual ? '#3b82f6' : 'white'}; 
-                           color: ${i === sistemaResultados.paginaAtual ? 'white' : '#374151'}; 
-                           border-radius: 4px; cursor: pointer; font-weight: ${i === sistemaResultados.paginaAtual ? '600' : '400'};">
-                ${i}
-            </button>
-        `;
-    }
-
-    controles += `
-            <button onclick="irParaPagina(${sistemaResultados.paginaAtual + 1})" ${sistemaResultados.paginaAtual === totalPaginas ? 'disabled' : ''} 
-                    style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; background: ${sistemaResultados.paginaAtual === totalPaginas ? '#f9fafb' : 'white'}; color: ${sistemaResultados.paginaAtual === totalPaginas ? '#9ca3af' : '#374151'}; border-radius: 4px; cursor: ${sistemaResultados.paginaAtual === totalPaginas ? 'not-allowed' : 'pointer'};">
-                Próxima ⏩
-            </button>
-            
-            <button onclick="irParaPagina(${totalPaginas})" ${sistemaResultados.paginaAtual === totalPaginas ? 'disabled' : ''} 
-                    style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; background: ${sistemaResultados.paginaAtual === totalPaginas ? '#f9fafb' : 'white'}; color: ${sistemaResultados.paginaAtual === totalPaginas ? '#9ca3af' : '#374151'}; border-radius: 4px; cursor: ${sistemaResultados.paginaAtual === totalPaginas ? 'not-allowed' : 'pointer'};">
-                Última ⏭️
-            </button>
-        </div>
-    `;
-
-    return controles;
-};
-
-// Função para obter indicador de ordenação
-const getIndicadorOrdenacao = (coluna) => {
-    if (sistemaResultados.colunaOrdenacao !== coluna) {
-        return '↕️';
-    }
-    return sistemaResultados.direcaoOrdenacao === 'asc' ? '🔼' : '🔽';
-};
-
-// Funções de controle
-window.alterarItensPorPagina = (novoValor) => {
-    sistemaResultados.itensPorPagina = parseInt(novoValor);
-    sistemaResultados.paginaAtual = 1;
-    renderizarTabela();
-};
-
-window.irParaPagina = (pagina) => {
-    const totalPaginas = Math.ceil(sistemaResultados.dadosOrdenados.length / sistemaResultados.itensPorPagina);
-    if (pagina >= 1 && pagina <= totalPaginas) {
-        sistemaResultados.paginaAtual = pagina;
-        renderizarTabela();
-    }
-};
-
-window.ordenarPorColuna = (coluna) => {
-    // Se clicou na mesma coluna, inverte a direção
-    if (sistemaResultados.colunaOrdenacao === coluna) {
-        sistemaResultados.direcaoOrdenacao = sistemaResultados.direcaoOrdenacao === 'asc' ? 'desc' : 'asc';
-    } else {
-        sistemaResultados.colunaOrdenacao = coluna;
-        sistemaResultados.direcaoOrdenacao = 'asc';
-    }
-
-    // Ordenar os dados
-    sistemaResultados.dadosOrdenados.sort((a, b) => {
-        let valorA = a[coluna];
-        let valorB = b[coluna];
-
-        // Tratamento especial para diferentes tipos de dados
-        switch (coluna) {
-            case 'valor_inicial':
-            case 'valor_atual':
-            case 'total_glosas':
-                valorA = parseFloat(valorA) || 0;
-                valorB = parseFloat(valorB) || 0;
-                break;
-            
-            case 'criado_em':
-                valorA = new Date(valorA).getTime();
-                valorB = new Date(valorB).getTime();
-                break;
-            
-            case 'numero_aih':
-                // Ordenar como string mas considerando números
-                valorA = valorA ? valorA.toString() : '';
-                valorB = valorB ? valorB.toString() : '';
-                break;
-            
-            case 'competencia':
-                // Ordenar competência por data (MM/AAAA)
-                if (valorA && valorB) {
-                    const [mesA, anoA] = valorA.split('/');
-                    const [mesB, anoB] = valorB.split('/');
-                    valorA = parseInt(anoA) * 100 + parseInt(mesA);
-                    valorB = parseInt(anoB) * 100 + parseInt(mesB);
-                } else {
-                    valorA = valorA || '';
-                    valorB = valorB || '';
-                }
-                break;
-            
-            default:
-                valorA = valorA ? valorA.toString().toLowerCase() : '';
-                valorB = valorB ? valorB.toString().toLowerCase() : '';
-        }
-
-        let resultado;
-        if (valorA < valorB) resultado = -1;
-        else if (valorA > valorB) resultado = 1;
-        else resultado = 0;
-
-        return sistemaResultados.direcaoOrdenacao === 'desc' ? -resultado : resultado;
-    });
-
-    // Voltar para primeira página após ordenar
-    sistemaResultados.paginaAtual = 1;
-    renderizarTabela();
-};
-
-// Função para visualizar AIH dos resultados
-window.visualizarAIH = async (numeroAIH) => {
-    try {
-        const aih = await api(`/aih/${numeroAIH}`);
-        state.aihAtual = aih;
-        state.telaAnterior = 'telaPesquisa';
-        mostrarInfoAIH(aih);
-    } catch (err) {
-        alert('Erro ao carregar AIH: ' + err.message);
-    }
-};
-
-// Função para atualização manual do dashboard
-window.atualizarDashboardManual = async () => {
-    try {
-        console.log('🔄 Iniciando atualização manual do dashboard...');
-        
-        // Elementos do botão e status
-        const botao = document.getElementById('btnAtualizarDashboard');
-        const icone = document.getElementById('iconAtualizarDashboard');
-        const texto = document.getElementById('textoAtualizarDashboard');
-        const status = document.getElementById('statusAtualizacao');
-        const ultimaAtualizacao = document.getElementById('ultimaAtualizacao');
-        
-        if (!botao || !icone || !texto || !status) {
-            console.error('Elementos do botão de atualização não encontrados');
-            return;
-        }
-        
-        // Desabilitar botão e mostrar loading
-        botao.disabled = true;
-        botao.style.opacity = '0.7';
-        botao.style.cursor = 'not-allowed';
-        icone.textContent = '⏳';
-        texto.textContent = 'Atualizando...';
-        
-        // Mostrar status de carregamento
-        status.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: #3b82f6;">
-                <div style="width: 12px; height: 12px; border: 2px solid #3b82f6; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                <span>Buscando dados atualizados...</span>
-            </div>
-        `;
-        
-        // Pegar competência atual selecionada
-        const selectCompetencia = document.getElementById('selectCompetencia');
-        const competenciaAtual = selectCompetencia ? selectCompetencia.value : getCompetenciaAtual();
-        
-        // Limpar cache para garantir dados frescos
-        console.log('🧹 Limpando cache para garantir dados atualizados...');
-        
-        // Recarregar dashboard com dados frescos
-        await carregarDashboard(competenciaAtual);
-        
-        // Mostrar feedback de sucesso
-        status.innerHTML = `
-            <div style="color: #10b981; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                <span>✅</span>
-                <span>Dashboard atualizado com sucesso!</span>
-            </div>
-        `;
-        
-        // Atualizar timestamp
-        if (ultimaAtualizacao) {
-            ultimaAtualizacao.textContent = `Última atualização: ${new Date().toLocaleTimeString('pt-BR')}`;
-        }
-        
-        // Voltar ao estado normal após 2 segundos
-        setTimeout(() => {
-            if (botao && icone && texto && status) {
-                botao.disabled = false;
-                botao.style.opacity = '1';
-                botao.style.cursor = 'pointer';
-                icone.textContent = '🔄';
-                texto.textContent = 'Atualizar Agora';
-                
-                // Voltar ao timestamp simples
-                status.innerHTML = `<span id="ultimaAtualizacao">Última atualização: ${new Date().toLocaleTimeString('pt-BR')}</span>`;
-            }
-        }, 2000);
-        
-        console.log('✅ Atualização manual do dashboard concluída');
-        
-    } catch (error) {
-        console.error('❌ Erro na atualização manual do dashboard:', error);
-        
-        // Elementos do botão e status
-        const botao = document.getElementById('btnAtualizarDashboard');
-        const icone = document.getElementById('iconAtualizarDashboard');
-        const texto = document.getElementById('textoAtualizarDashboard');
-        const status = document.getElementById('statusAtualizacao');
-        
-        // Mostrar erro
-        if (status) {
-            status.innerHTML = `
-                <div style="color: #ef4444; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                    <span>❌</span>
-                    <span>Erro ao atualizar. Tente novamente.</span>
-                </div>
-            `;
-        }
-        
-        // Voltar ao estado normal após 3 segundos
-        setTimeout(() => {
-            if (botao && icone && texto && status) {
-                botao.disabled = false;
-                botao.style.opacity = '1';
-                botao.style.cursor = 'pointer';
-                icone.textContent = '🔄';
-                texto.textContent = 'Atualizar Agora';
-                
-                status.innerHTML = `<span id="ultimaAtualizacao">Última atualização: ${new Date().toLocaleTimeString('pt-BR')}</span>`;
-            }
-        }, 3000);
-    }
-};
-
-// Função para visualizar AIHs por categoria do dashboard
-window.visualizarAIHsPorCategoria = async (categoria, periodo) => {
-    try {
-        console.log(`Carregando AIHs da categoria: ${categoria}, período: ${periodo}`);
-        
-        // Mostrar indicador de carregamento
-        const loadingModal = document.createElement('div');
-        loadingModal.style.cssText = `
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-            background: rgba(0,0,0,0.7); display: flex; align-items: center; 
-            justify-content: center; z-index: 9999;
-        `;
-        loadingModal.innerHTML = `
-            <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;">
-                <div style="border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-                <p>Carregando AIHs...</p>
-            </div>
-        `;
-        document.body.appendChild(loadingModal);
-
-        // Construir filtros baseados na categoria
-        let filtros = {};
-        
-        switch(categoria) {
-            case 'em_processamento':
-                // AIHs em processamento = entradas SUS - saídas hospital na competência
-                filtros = { em_processamento_competencia: periodo };
-                break;
-            case 'finalizadas':
-                filtros = { status: [1, 4] };
-                if (periodo !== 'geral') {
-                    filtros.competencia = periodo;
-                }
-                break;
-            case 'com_pendencias':
-                filtros = { status: [2, 3] };
-                if (periodo !== 'geral') {
-                    filtros.competencia = periodo;
-                }
-                break;
-            case 'total_processamento':
-                filtros = { em_processamento_geral: true };
-                break;
-            case 'total_finalizadas':
-                filtros = { status: [1, 4] };
-                break;
-            case 'total_cadastradas':
-                filtros = {}; // Todas as AIHs
-                break;
-        }
-
-        // Fazer requisição para buscar AIHs
-        const response = await api('/pesquisar', {
-            method: 'POST',
-            body: JSON.stringify({ filtros })
-        });
-
-        // Remover loading
-        document.body.removeChild(loadingModal);
-
-        // Definir título baseado na categoria
-        let titulo = '';
-        let descricao = '';
-        
-        switch(categoria) {
-            case 'em_processamento':
-                titulo = `📊 AIHs Em Processamento - ${periodo}`;
-                descricao = 'AIHs que estão atualmente na Auditoria SUS em processamento';
-                break;
-            case 'finalizadas':
-                titulo = `✅ AIHs Finalizadas${periodo !== 'geral' ? ` - ${periodo}` : ' (Histórico Geral)'}`;
-                descricao = 'AIHs que já tiveram sua auditoria concluída com concordância de ambas auditorias';
-                break;
-            case 'com_pendencias':
-                titulo = `⚠️ AIHs Com Pendências${periodo !== 'geral' ? ` - ${periodo}` : ' (Histórico Geral)'}`;
-                descricao = 'AIHs que estão com alguma pendência passível de recurso e discussão pelas partes envolvidas';
-                break;
-            case 'total_processamento':
-                titulo = '🏥 Total de AIHs Em Processamento (Geral)';
-                descricao = 'Todas as AIHs que estão em processamento desde o início do sistema';
-                break;
-            case 'total_finalizadas':
-                titulo = '🎯 Total de AIHs Finalizadas (Geral)';
-                descricao = 'Todas as AIHs finalizadas desde o início do sistema';
-                break;
-            case 'total_cadastradas':
-                titulo = '📈 Total de AIHs Cadastradas (Geral)';
-                descricao = 'Todas as AIHs registradas no sistema desde o início';
-                break;
-        }
-
-        // Ir para tela de pesquisa e exibir resultados
-        mostrarTela('telaPesquisa');
-        
-        // **NOVO**: Carregar profissionais sempre que acessar a tela de pesquisa através do dashboard
-        setTimeout(() => {
-            carregarProfissionaisPesquisa();
-        }, 100);
-        
-        // Aguardar um pouco para garantir que a tela foi carregada
-        setTimeout(() => {
-            if (!response.resultados || response.resultados.length === 0) {
-                const container = document.getElementById('resultadosPesquisa');
-                if (container) {
-                    container.innerHTML = `
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2rem; text-align: center; margin-top: 2rem;">
-                            <h3 style="color: #64748b; margin-bottom: 1rem;">${titulo}</h3>
-                            <p style="color: #64748b; margin-bottom: 1rem;">${descricao}</p>
-                            <p style="color: #64748b;">📭 Nenhuma AIH encontrada nesta categoria.</p>
-                            <button onclick="voltarTelaPrincipal()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                                ← Voltar ao Dashboard
-                            </button>
-                        </div>
-                    `;
-                }
-                return;
-            }
-
-            // Usar o novo sistema de paginação e ordenação
-            exibirResultadosPesquisa(response.resultados, titulo, descricao);
-        }, 200);
-
-    } catch (err) {
-        console.error('Erro ao carregar AIHs por categoria:', err);
-        
-        // Remover loading se existir
-        const loadingModal = document.querySelector('[style*="position: fixed"]');
-        if (loadingModal) {
-            document.body.removeChild(loadingModal);
-        }
-        
-        alert('Erro ao carregar AIHs: ' + err.message);
-    }
-};
-
-// Navegação para relatórios
-document.getElementById('btnRelatorios').addEventListener('click', () => {
-    console.log('Navegando para tela de relatórios...');
-    mostrarTela('telaRelatorios');
-    
-    // Aguardar um pouco para garantir que a tela foi carregada
-    setTimeout(() => {
-        carregarRelatorios();
-    }, 100);
-});
-
-// Navegação para alterar BD
-document.getElementById('btnAlterarBD').addEventListener('click', () => {
-    console.log('Navegando para tela de alteração da BD...');
-    mostrarTela('telaAlterarBD');
-    
-    // Aguardar um pouco para garantir que a tela foi carregada
-    setTimeout(() => {
-        configurarAlteracaoBD();
-        // Carregar logs automaticamente após um pequeno delay
-        setTimeout(() => {
-            carregarLogsExclusao();
-        }, 500);
-    }, 100);
-});
-
-// Carregar opções de relatórios
-const carregarRelatorios = () => {
-    console.log('🔄 Carregando opções de relatórios...');
-    const container = document.getElementById('opcoesRelatorios');
-    
-    if (!container) {
-        console.error('❌ Container opcoesRelatorios não encontrado!');
-        return;
-    }
-
-    // Preencher competência atual automaticamente
-    const competenciaAtual = getCompetenciaAtual();
-
-    container.innerHTML = `
-        <!-- Filtros Unificados -->
-        <div style="background: #f0f9ff; border: 1px solid #0284c7; border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
-            <h3 style="color: #0369a1; margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                <span>🔍</span> Filtros para Relatórios
-            </h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end;">
-                <div>
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Competência (MM/AAAA):</label>
-                    <input type="text" id="relatorioCompetencia" placeholder="07/2025" value="${competenciaAtual}"
-                           style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
-                </div>
-                <div>
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Data Início:</label>
-                    <input type="date" id="relatorioDataInicio"
-                           style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
-                </div>
-                <div>
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Data Fim:</label>
-                    <input type="date" id="relatorioDataFim"
-                           style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
-                </div>
-                <div>
-                    <button onclick="limparFiltrosRelatorio()" 
-                            style="background: #64748b; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;">
-                        🗑️ Limpar Filtros
-                    </button>
-                </div>
-            </div>
-            <div style="margin-top: 1rem; padding: 1rem; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 6px; font-size: 0.875rem;">
-                <strong style="color: #92400e;">💡 Dica:</strong> 
-                <span style="color: #92400e;">Informe uma COMPETÊNCIA (MM/AAAA) OU um PERÍODO (data início + data fim) para gerar relatórios com filtros. Alguns relatórios funcionam sem filtros.</span>
-            </div>
-        </div>
-
-        <!-- Relatórios Básicos -->
-        <div style="margin-bottom: 3rem;">
-            <h3 style="color: #374151; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>📊</span> Relatórios Básicos
-                <span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Sem filtros obrigatórios</span>
-            </h3>
-            <div class="relatorios-grid">
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('acessos')">
-                    <div class="relatorio-icon">👥</div>
-                    <h4>Relatório de Acessos</h4>
-                    <p>Usuários e frequência de acessos ao sistema</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('aprovacoes')">
-                    <div class="relatorio-icon">✅</div>
-                    <h4>Relatório de Aprovações</h4>
-                    <p>Distribuição por status de aprovação das AIHs</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('glosas-profissional')">
-                    <div class="relatorio-icon">⚠️</div>
-                    <h4>Glosas por Profissional</h4>
-                    <p>Glosas identificadas por cada auditor</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('tipos-glosa')">
-                    <div class="relatorio-icon">📋</div>
-                    <h4>Tipos de Glosa</h4>
-                    <p>Ranking dos tipos de glosa mais frequentes</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('fluxo-movimentacoes')">
-                    <div class="relatorio-icon">🔄</div>
-                    <h4>Fluxo de Movimentações</h4>
-                    <p>Entradas SUS vs Saídas Hospital</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Relatórios Avançados -->
-        <div style="margin-bottom: 3rem;">
-            <h3 style="color: #374151; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>🔬</span> Relatórios Avançados
-                <span style="background: #f59e0b; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Requer período</span>
-            </h3>
-            <div class="relatorios-grid">
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('produtividade-auditores')">
-                    <div class="relatorio-icon">📈</div>
-                    <h4>Produtividade dos Auditores</h4>
-                    <p>Análise detalhada de performance dos profissionais</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('aihs-profissional-periodo')">
-                    <div class="relatorio-icon">👨‍⚕️</div>
-                    <h4>AIHs por Profissional (Período)</h4>
-                    <p>Produtividade por auditor no período específico</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('glosas-profissional-periodo')">
-                    <div class="relatorio-icon">⚠️</div>
-                    <h4>Glosas por Profissional (Período)</h4>
-                    <p>Glosas identificadas por auditor no período</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('cruzamento-profissional-glosas')">
-                    <div class="relatorio-icon">🔀</div>
-                    <h4>Cruzamento Profissional x Glosas</h4>
-                    <p>Relação entre auditores e tipos de glosa</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('analise-valores-glosas')">
-                    <div class="relatorio-icon">💸</div>
-                    <h4>Análise de Valores de Glosas</h4>
-                    <p>Resumo financeiro das glosas no período</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('valores-glosas-periodo')">
-                    <div class="relatorio-icon">💰</div>
-                    <h4>Valores de Glosas (Período)</h4>
-                    <p>Análise financeira detalhada das glosas</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('analise-financeira')">
-                    <div class="relatorio-icon">📊</div>
-                    <h4>Análise Financeira</h4>
-                    <p>Relatório financeiro abrangente do período</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('estatisticas-periodo')">
-                    <div class="relatorio-icon">📈</div>
-                    <h4>Estatísticas Gerais do Período</h4>
-                    <p>Visão geral das estatísticas do período</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('eficiencia-processamento')">
-                    <div class="relatorio-icon">⚡</div>
-                    <h4>Eficiência de Processamento</h4>
-                    <p>Análise de eficiência e tempo de processamento</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('detalhamento-status')">
-                    <div class="relatorio-icon">📋</div>
-                    <h4>Detalhamento por Status</h4>
-                    <p>Análise detalhada por status das AIHs</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('tipos-glosa-periodo')">
-                    <div class="relatorio-icon">📊</div>
-                    <h4>Tipos de Glosa (Período)</h4>
-                    <p>Ranking de tipos de glosa no período específico</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('ranking-glosas-frequentes')">
-                    <div class="relatorio-icon">🏆</div>
-                    <h4>Ranking de Glosas Frequentes</h4>
-                    <p>Glosas mais frequentes e seu impacto</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('analise-temporal-cadastros')">
-                    <div class="relatorio-icon">⏰</div>
-                    <h4>Análise Temporal de Cadastros</h4>
-                    <p>Evolução temporal dos cadastros de AIHs</p>
-                </div>
-
-                <div class="relatorio-card" onclick="gerarRelatorioPeriodo('analise-preditiva')">
-                    <div class="relatorio-icon">🔮</div>
-                    <h4>Análise Preditiva</h4>
-                    <p>Tendências e previsões baseadas nos dados</p>
-                </div>
-            </div>
-        </div>
-    `;
-};
-
-// Gerar relatório
-window.gerarRelatorio = async (tipo) => {
-    try {
-        // Mostrar indicador de carregamento
-        const loadingModal = document.createElement('div');
-        loadingModal.style.cssText = `
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-            background: rgba(0,0,0,0.7); display: flex; align-items: center; 
-            justify-content: center; z-index: 9999;
-        `;
-        loadingModal.innerHTML = `
-            <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;">
-                <div style="border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-                <p>Gerando relatório...</p>
-            </div>
-        `;
-        document.body.appendChild(loadingModal);
-
-        // Coletar filtros se existirem
-        const filtros = coletarFiltrosRelatorio();
-
-        const response = await api(`/relatorios/${tipo}`, {
-            method: 'POST',
-            body: JSON.stringify(filtros)
-        });
-
-        // Remover loading
-        document.body.removeChild(loadingModal);
-
-        // Exibir relatório em interface dedicada
-        exibirRelatorioMelhorado(tipo, response.resultado, filtros);
-    } catch (err) {
-        // Remover loading se existir
-        const loadingModal = document.querySelector('[style*="position: fixed"]');
-        if (loadingModal) {
-            document.body.removeChild(loadingModal);
-        }
-        alert('Erro ao gerar relatório: ' + err.message);
-    }
-};
-
-// Exibir relatório melhorado
-const exibirRelatorioMelhorado = (tipo, dados, filtros = {}) => {
-    const container = document.getElementById('resultadoRelatorio');
-    const titulo = getTituloRelatorio(tipo);
-    
-    // Formatar período dos filtros
-    let periodoInfo = '';
-    if (filtros.competencia) {
-        periodoInfo = `Competência: ${filtros.competencia}`;
-    } else if (filtros.data_inicio && filtros.data_fim) {
-        periodoInfo = `Período: ${filtros.data_inicio} até ${filtros.data_fim}`;
-    } else if (filtros.data_inicio) {
-        periodoInfo = `A partir de: ${filtros.data_inicio}`;
-    } else if (filtros.data_fim) {
-        periodoInfo = `Até: ${filtros.data_fim}`;
-    } else {
-        periodoInfo = 'Todos os dados disponíveis';
-    }
-
-    let html = `
-        <div class="relatorio-container" style="background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 2rem;">
-            <!-- Cabeçalho do Relatório -->
-            <div class="relatorio-header" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; padding: 2rem; border-radius: 12px 12px 0 0;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                        <h2 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">📊 ${titulo}</h2>
-                        <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">${periodoInfo}</p>
-                        <p style="margin: 0.5rem 0 0 0; opacity: 0.8; font-size: 0.8rem;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
-                    </div>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button onclick="exportarRelatorio('${tipo}', ${JSON.stringify(filtros).replace(/"/g, '&quot;')})" 
-                                class="btn-export-relatorio"
-                                style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); color: white; border: 2px solid rgba(255,255,255,0.3); padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;"
-                                onmouseover="this.style.background='rgba(255,255,255,0.3)'"
-                                onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-                            📊 Exportar Excel
-                        </button>
-                        <button onclick="voltarListaRelatorios()" 
-                                style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); color: white; border: 2px solid rgba(255,255,255,0.3); padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;"
-                                onmouseover="this.style.background='rgba(255,255,255,0.3)'"
-                                onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-                            ← Voltar aos Relatórios
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Conteúdo do Relatório -->
-            <div class="relatorio-content" style="padding: 2rem;">
-    `;
-
-    // Processar diferentes tipos de dados
-    if (Array.isArray(dados) && dados.length > 0) {
-        // Relatório tabular
-        html += gerarTabelaRelatorio(dados, tipo);
-    } else if (dados && typeof dados === 'object' && !Array.isArray(dados)) {
-        // Relatório com estrutura complexa
-        html += gerarRelatorioComplexo(dados, tipo);
-    } else if (Array.isArray(dados) && dados.length === 0) {
-        html += `
-            <div style="text-align: center; padding: 3rem; color: #64748b;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
-                <h3>Nenhum dado encontrado</h3>
-                <p>Não há dados disponíveis para os filtros selecionados.</p>
-            </div>
-        `;
-    } else {
-        // Dados simples
-        html += `
-            <div style="background: #f8fafc; border-radius: 8px; padding: 2rem;">
-                <pre style="margin: 0; white-space: pre-wrap; font-family: 'Courier New', monospace;">${JSON.stringify(dados, null, 2)}</pre>
-            </div>
-        `;
-    }
-
-    html += `
-            </div>
-        </div>
-    `;
-
-    container.innerHTML = html;
-    
-    // Scroll suave para o relatório
-    container.scrollIntoView({ behavior: 'smooth' });
-};
-
-// Gerar tabela para relatórios
-const gerarTabelaRelatorio = (dados, tipo) => {
-    const cabecalhos = Object.keys(dados[0]);
-    
-    return `
-        <div style="margin-bottom: 1.5rem;">
-            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
-                <h3 style="color: #374151; margin: 0;">📋 Resultados (${dados.length} registro${dados.length !== 1 ? 's' : ''})</h3>
-            </div>
-            
-            <div style="overflow-x: auto; border-radius: 8px; border: 1px solid #e5e7eb;">
-                <table style="width: 100%; border-collapse: collapse; background: white;">
-                    <thead style="background: #f9fafb;">
-                        <tr>
-                            ${cabecalhos.map(header => `
-                                <th style="padding: 1rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap;">
-                                    ${formatarCabecalho(header)}
-                                </th>
-                            `).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${dados.map((item, index) => `
-                            <tr style="border-bottom: 1px solid #f3f4f6; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='white'">
-                                ${cabecalhos.map(header => `
-                                    <td style="padding: 1rem; color: #374151; border-bottom: 1px solid #f3f4f6;">
-                                        ${formatarValorTabela(item[header], header)}
-                                    </td>
-                                `).join('')}
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
-};
-
-// Gerar relatório complexo (com subseções)
-const gerarRelatorioComplexo = (dados, tipo) => {
-    let html = '';
-    
-    if (tipo === 'fluxo-movimentacoes' && dados.resumo && dados.fluxo_mensal) {
-        // Relatório de fluxo de movimentações
-        const resumo = dados.resumo;
-        html += `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                <div style="background: #e0f2fe; border: 1px solid #0284c7; border-radius: 8px; padding: 1.5rem; text-align: center;">
-                    <h4 style="color: #0369a1; margin: 0 0 0.5rem 0;">📥 Entradas SUS</h4>
-                    <p style="font-size: 2rem; font-weight: bold; color: #0369a1; margin: 0;">${resumo.total_entradas_sus || 0} AIHs</p>
-                    <p style="font-size: 0.875rem; color: #0284c7; margin: 0.5rem 0 0 0;">AIHs que entraram na auditoria</p>
-                </div>
-                <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 1.5rem; text-align: center;">
-                    <h4 style="color: #92400e; margin: 0 0 0.5rem 0;">📤 Saídas Hospital</h4>
-                    <p style="font-size: 2rem; font-weight: bold; color: #92400e; margin: 0;">${resumo.total_saidas_hospital || 0} AIHs</p>
-                    <p style="font-size: 0.875rem; color: #f59e0b; margin: 0.5rem 0 0 0;">AIHs enviadas para o hospital</p>
-                </div>
-                <div style="background: ${(resumo.diferenca_fluxo || 0) >= 0 ? '#f0fdf4' : '#fef2f2'}; border: 1px solid ${(resumo.diferenca_fluxo || 0) >= 0 ? '#22c55e' : '#ef4444'}; border-radius: 8px; padding: 1.5rem; text-align: center;">
-                    <h4 style="color: ${(resumo.diferenca_fluxo || 0) >= 0 ? '#166534' : '#dc2626'}; margin: 0 0 0.5rem 0;">⚖️ Saldo</h4>
-                    <p style="font-size: 2rem; font-weight: bold; color: ${(resumo.diferenca_fluxo || 0) >= 0 ? '#166534' : '#dc2626'}; margin: 0;">
-                        ${(resumo.diferenca_fluxo || 0) >= 0 ? '+' : ''}${resumo.diferenca_fluxo || 0} AIHs
-                    </p>
-                    <p style="font-size: 0.875rem; color: ${(resumo.diferenca_fluxo || 0) >= 0 ? '#22c55e' : '#ef4444'}; margin: 0.5rem 0 0 0;">
-                        ${(resumo.diferenca_fluxo || 0) >= 0 ? 'Entradas > Saídas' : 'Saídas > Entradas'}
-                    </p>
-                </div>
-                <div style="background: #f0f9ff; border: 1px solid #3b82f6; border-radius: 8px; padding: 1.5rem; text-align: center;">
-                    <h4 style="color: #1d4ed8; margin: 0 0 0.5rem 0;">🔄 Em Processamento</h4>
-                    <p style="font-size: 2rem; font-weight: bold; color: #1d4ed8; margin: 0;">${resumo.aihs_em_processamento || 0} AIHs</p>
-                    <p style="font-size: 0.875rem; color: #3b82f6; margin: 0.5rem 0 0 0;">Atualmente na auditoria SUS</p>
-                </div>
-            </div>
-        `;
-        
-        if (dados.fluxo_mensal && dados.fluxo_mensal.length > 0) {
-            html += `<h3 style="color: #374151; margin: 2rem 0 1rem 0;">📊 Fluxo Mensal Detalhado</h3>`;
-            html += gerarTabelaRelatorio(dados.fluxo_mensal, 'fluxo_mensal');
-        }
-    } else if (tipo === 'analise-valores-glosas' && dados.resumo_financeiro) {
-        // Relatório de análise de valores - apenas 3 cards principais
-        html += `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                <div style="background: #e0f2fe; border: 1px solid #0284c7; border-radius: 12px; padding: 2rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🏥</div>
-                    <h4 style="color: #0369a1; margin: 0 0 0.75rem 0; font-size: 1.1rem;">AIHs com Glosas</h4>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: #0369a1; margin: 0; line-height: 1;">${dados.resumo_financeiro.aihs_com_glosas || 0}</p>
-                    <p style="font-size: 0.875rem; color: #0284c7; margin: 0.5rem 0 0 0; font-style: italic;">Quantidade de AIHs que possuem pelo menos uma glosa ativa</p>
-                </div>
-                
-                <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 12px; padding: 2rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">⚠️</div>
-                    <h4 style="color: #92400e; margin: 0 0 0.75rem 0; font-size: 1.1rem;">Total de Glosas</h4>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: #92400e; margin: 0; line-height: 1;">${dados.resumo_financeiro.total_glosas || 0}</p>
-                    <p style="font-size: 0.875rem; color: #f59e0b; margin: 0.5rem 0 0 0; font-style: italic;">Número total de glosas registradas no período</p>
-                </div>
-                
-                <div style="background: #fef2f2; border: 1px solid #ef4444; border-radius: 12px; padding: 2rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">💸</div>
-                    <h4 style="color: #dc2626; margin: 0 0 0.75rem 0; font-size: 1.1rem;">Valor Total das Glosas</h4>
-                    <p style="font-size: 2rem; font-weight: bold; color: #dc2626; margin: 0; line-height: 1;">R$ ${(dados.resumo_financeiro.valor_total_glosas || 0).toFixed(2)}</p>
-                    <p style="font-size: 0.875rem; color: #ef4444; margin: 0.5rem 0 0 0; font-style: italic;">Diferença entre valor inicial e atual (perda financeira)</p>
-                </div>
-            </div>
-        `;
-    } else if (tipo === 'analise-financeira' && dados.resumo_geral && dados.distribuicao_por_faixa) {
-        // Análise financeira completa
-        const resumo = dados.resumo_geral;
-        html += `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 1.5rem;">
-                    <h4 style="color: #166534; margin: 0 0 1rem 0;">💰 Valores Iniciais</h4>
-                    <p style="margin: 0.5rem 0;"><strong>Total:</strong> R$ ${(resumo.valor_inicial_geral || 0).toFixed(2)}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Média:</strong> R$ ${(resumo.valor_inicial_medio || 0).toFixed(2)}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Menor:</strong> R$ ${(resumo.menor_valor_inicial || 0).toFixed(2)}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Maior:</strong> R$ ${(resumo.maior_valor_inicial || 0).toFixed(2)}</p>
-                </div>
-                <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 1.5rem;">
-                    <h4 style="color: #92400e; margin: 0 0 1rem 0;">📉 Valores Atuais</h4>
-                    <p style="margin: 0.5rem 0;"><strong>Total:</strong> R$ ${(resumo.valor_atual_geral || 0).toFixed(2)}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Média:</strong> R$ ${(resumo.valor_atual_medio || 0).toFixed(2)}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Menor:</strong> R$ ${(resumo.menor_valor_atual || 0).toFixed(2)}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Maior:</strong> R$ ${(resumo.maior_valor_atual || 0).toFixed(2)}</p>
-                </div>
-                <div style="background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; padding: 1.5rem;">
-                    <h4 style="color: #dc2626; margin: 0 0 1rem 0;">📊 Perdas (Glosas)</h4>
-                    <p style="margin: 0.5rem 0;"><strong>Total:</strong> R$ ${(resumo.perdas_glosas || 0).toFixed(2)}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Média por AIH:</strong> R$ ${(resumo.perda_media_por_aih || 0).toFixed(2)}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Total de AIHs:</strong> ${resumo.total_aihs || 0}</p>
-                </div>
-            </div>
-        `;
-        
-        if (dados.distribuicao_por_faixa && dados.distribuicao_por_faixa.length > 0) {
-            html += `<h3 style="color: #374151; margin: 2rem 0 1rem 0;">📊 Distribuição por Faixa de Valor</h3>`;
-            html += gerarTabelaRelatorio(dados.distribuicao_por_faixa, 'distribuicao_faixas');
-        }
-    } else {
-        // Outros tipos de relatórios complexos
-        Object.keys(dados).forEach(chave => {
-            const valor = dados[chave];
-            if (Array.isArray(valor) && valor.length > 0) {
-                html += `<h3 style="color: #374151; margin: 2rem 0 1rem 0;">${formatarCabecalho(chave)}</h3>`;
-                html += gerarTabelaRelatorio(valor, chave);
-            } else if (typeof valor === 'object' && valor !== null) {
-                html += `
-                    <div style="background: #f8fafc; border-radius: 8px; padding: 1.5rem; margin: 1rem 0;">
-                        <h4 style="color: #374151; margin: 0 0 1rem 0;">${formatarCabecalho(chave)}</h4>
-                        <pre style="margin: 0; white-space: pre-wrap; font-family: 'Courier New', monospace; color: #4b5563;">${JSON.stringify(valor, null, 2)}</pre>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; margin: 0.25rem 0; background: #f8fafc; border-radius: 6px; border-left: 4px solid #6366f1;">
-                        <span style="font-weight: 600; color: #374151;">${formatarCabecalho(chave)}:</span>
-                        <span style="color: #6366f1; font-weight: 600;">${formatarValorTabela(valor, chave)}</span>
-                    </div>
-                `;
-            }
-        });
-    }
-    
-    return html;
-};
-
-// Formatار cabeçalho da tabela
-const formatarCabecalho = (header) => {
-    return header
-        .replace(/_/g, ' ')
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-};
-
-// Formatear valor da tabela
-const formatarValorTabela = (valor, header) => {
-    if (valor === null || valor === undefined) return '-';
-    
-    // Campos de quantidade unitária (não devem ter R$ nem texto adicional)
-    if (header.includes('AIHs') || header.includes('Qtd') || header.includes('Quantidade') || 
-        header.includes('Saldo Mensal') || header.includes('Movimentações') || header.includes('movimentacoes') ||
-        header.includes('Total Movimentacoes') || header.includes('Total AIHs') || 
-        header.includes('Auditadas') || header.includes('auditadas') ||
-        header.includes('Ocorrencias') || header.includes('total_ocorrencias')) {
-        // Excluir "Total Glosas" da lista de campos de quantidade para que seja tratado como valor monetário
-        if (typeof valor === 'number') {
-            return valor.toString();
-        }
-        return valor;
-    }
-    
-    // Campos de valor monetário
-    if (header.includes('valor') || header.includes('impacto') || header.includes('media') ||
-        header.includes('Total Glosas') || header.includes('total_glosas')) {
-        if (typeof valor === 'number') {
-            return `R$ ${valor.toFixed(2)}`;
-        }
-    }
-    
-    // Campos de data
-    if (header.includes('data') || header.includes('Data')) {
-        if (typeof valor === 'string' && valor.includes('-')) {
-            try {
-                return new Date(valor).toLocaleDateString('pt-BR');
-            } catch (e) {
-                return valor;
-            }
-        }
-    }
-    
-    // Campos de porcentagem
-    if (header.includes('percentual') || header.includes('Percentual')) {
-        if (typeof valor === 'number') {
-            return `${valor.toFixed(1)}%`;
-        }
-    }
-    
-    return valor.toString();
-};
-
-// Voltar para lista de relatórios
-window.voltarListaRelatorios = () => {
-    const container = document.getElementById('resultadoRelatorio');
-    container.innerHTML = '';
-    container.scrollIntoView({ behavior: 'smooth' });
-};
-
-// Obter título do relatório
-const getTituloRelatorio = (tipo) => {
-    const titulos = {
-        'acessos': 'Relatório de Acessos',
-        'aprovacoes': 'Relatório de Aprovações',
-        'glosas-profissional': 'Glosas por Profissional',
-        'aihs-profissional': 'AIHs por Profissional',
-        'tipos-glosa': 'Tipos de Glosa',
-        'fluxo-movimentacoes': 'Fluxo de Movimentações - Entradas SUS vs Saídas Hospital',
-        'estatisticas-periodo': 'Estatísticas Gerais por Período',
-        'valores-glosas-periodo': 'Análise Financeira de Glosas',
-        'tipos-glosa-periodo': 'Tipos de Glosa por Período',
-        'aihs-profissional-periodo': 'Produtividade por Profissional'
-    };
-    return titulos[tipo] || 'Relatório';
-};
-
-// Coletar filtros de relatórios
-const coletarFiltrosRelatorio = () => {
-    const filtros = {};
-    
-    const dataInicio = document.getElementById('relatorioDataInicio')?.value;
-    if (dataInicio) filtros.data_inicio = dataInicio;
-    
-    const dataFim = document.getElementById('relatorioDataFim')?.value;
-    if (dataFim) filtros.data_fim = dataFim;
-    
-    const competencia = document.getElementById('relatorioCompetencia')?.value;
-    if (competencia) filtros.competencia = competencia;
-    
-    return filtros;
-};
-
-// Exportar relatório
-window.exportarRelatorio = async (tipo, filtros = {}) => {
-    try {
-        // Mostrar indicador de carregamento
-        const botaoExport = event.target;
-        const textoOriginal = botaoExport.textContent;
-        botaoExport.textContent = '⏳ Exportando...';
-        botaoExport.disabled = true;
-
-        const response = await fetch(`/api/relatorios/${tipo}/export`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${state.token}`
-            },
-            body: JSON.stringify(filtros)
-        });
-
-        if (!response.ok) {
-            throw new Error('Erro ao exportar relatório');
-        }
-
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `relatorio-${tipo}-${new Date().toISOString().split('T')[0]}.xls`;
-        link.click();
-        URL.revokeObjectURL(url);
-
-        alert('Relatório exportado com sucesso!');
-    } catch (err) {
-        alert('Erro ao exportar relatório: ' + err.message);
-    } finally {
-        // Restaurar botão
-        if (event.target) {
-            event.target.textContent = textoOriginal;
-            event.target.disabled = false;
-        }
-    }
-};
-
-
-
-// Gerar relatório com período
-window.gerarRelatorioPeriodo = async (tipo) => {
-    try {
-        // Mostrar indicador de carregamento
-        const loadingModal = document.createElement('div');
-        loadingModal.style.cssText = `
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-            background: rgba(0,0,0,0.7); display: flex; align-items: center; 
-            justify-content: center; z-index: 9999;
-        `;
-        loadingModal.innerHTML = `
-            <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;">
-                <div style="border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-                <p>Gerando relatório ${getTituloRelatorio(tipo)}...</p>
-            </div>
-        `;
-        document.body.appendChild(loadingModal);
-
-        // Coletar filtros dos campos unificados
-        const dataInicio = document.getElementById('relatorioDataInicio')?.value || '';
-        const dataFim = document.getElementById('relatorioDataFim')?.value || '';
-        const competencia = document.getElementById('relatorioCompetencia')?.value || '';
-
-        // Validação: para alguns relatórios, é obrigatório ter período ou competência
-        const relatoriosComFiltroObrigatorio = [
-            'tipos-glosa-periodo', 'aihs-profissional-periodo', 'glosas-profissional-periodo',
-            'valores-glosas-periodo', 'estatisticas-periodo', 'produtividade-auditores',
-            'analise-valores-glosas', 'performance-competencias', 'ranking-glosas-frequentes',
-            'analise-temporal-cadastros', 'comparativo-auditorias', 'detalhamento-status',
-            'analise-financeira', 'eficiencia-processamento', 'cruzamento-profissional-glosas',
-            'analise-preditiva'
-        ];
-
-        if (relatoriosComFiltroObrigatorio.includes(tipo) && !competencia && (!dataInicio || !dataFim)) {
-            // Remover loading
-            document.body.removeChild(loadingModal);
-            
-            alert(`⚠️ Este relatório requer filtros obrigatórios!\n\nInforme uma COMPETÊNCIA (MM/AAAA) OU um PERÍODO completo (data início + data fim) para gerar o relatório.\n\nExemplo:\n• Competência: 07/2025\n• Período: 01/01/2025 até 31/12/2025`);
-            return;
-        }
-
-        const filtros = {
-            data_inicio: dataInicio,
-            data_fim: dataFim,
-            competencia: competencia
-        };
-
-        console.log(`Gerando relatório ${tipo} com filtros:`, filtros);
-
-        const response = await api(`/relatorios/${tipo}`, {
-            method: 'POST',
-            body: JSON.stringify(filtros)
-        });
-
-        // Remover loading
-        document.body.removeChild(loadingModal);
-
-        // Exibir relatório usando a função melhorada
-        exibirRelatorioMelhorado(tipo, response.resultado, filtros);
-
-    } catch (err) {
-        // Remover loading se existir
-        const loadingModal = document.querySelector('[style*="position: fixed"]');
-        if (loadingModal) {
-            document.body.removeChild(loadingModal);
-        }
-        
-        console.error('Erro ao gerar relatório:', err);
-        alert('Erro ao gerar relatório: ' + err.message);
-    }
-};
-
-// Exibir relatório com período
-const exibirRelatorioPeriodo = (tipo, dados, filtros) => {
-    const container = document.getElementById('resultadoRelatorioPeriodo');
-    let html = `
-        <h4>📊 ${getTituloRelatorio(tipo)}</h4>
-        <p><strong>Período:</strong> ${filtros.dataInicio || 'Início'} até ${filtros.dataFim || 'Fim'} 
-           ${filtros.competencia ? `| Competência: ${filtros.competencia}` : ''}</p>
-        <div style="margin-bottom: 1rem;">
-            <button onclick="exportarRelatorioPeriodo('${tipo}', ${JSON.stringify(filtros).replace(/"/g, '&quot;')})" class="btn-success">
-                📊 Exportar Excel
-            </button>
-        </div>
-    `;
-
-    if (Array.isArray(dados)) {
-        html += `
-            <table>
-                <thead>
-                    <tr>
-                        ${Object.keys(dados[0] || {}).map(key => `<th>${key}</th>`).join('')}
-                    </tr>
-                </thead>
-                <tbody>
-                    ${dados.map(item => `
-                        <tr>
-                            ${Object.values(item).map(value => `<td>${value}</td>`).join('')}
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-    } else {
-        html += `<pre>${JSON.stringify(dados, null, 2)}</pre>`;
-    }
-
-    container.innerHTML = html;
-};
-
-// Exportar relatório com período
-window.exportarRelatorioPeriodo = (tipo, filtros) => {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/api/relatorios/${tipo}/export`;
-    form.style.display = 'none';
-
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'data';
-    input.value = JSON.stringify(filtros);
-
-    form.appendChild(input);
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-};
-
-// Função para carregar glosas
-const carregarGlosas = async () => {
-    if (!state.aihAtual) return;
-
-    try {
-        const [glosas, tipos, profissionais] = await Promise.all([
-            api(`/aih/${state.aihAtual.id}/glosas`),
-            api('/tipos-glosa'),
-            api('/profissionais')
-        ]);
-
-        // Atualizar glosas atuais
-        const container = document.getElementById('glosasAtuais');
-        if (container && glosas.glosas) {
-            container.innerHTML = `
-                <h4>📋 Glosas Atuais</h4>
-                ${glosas.glosas.length > 0 ? glosas.glosas.map(g => `
-                    <div class="glosa-item">
-                        <div>
-                            <strong>${g.linha}</strong> - ${g.tipo}
-                            <br>
-                            <span style="color: #64748b;">Por: ${g.profissional}</span>
-                        </div>
-                        <button onclick="removerGlosa(${g.id})" class="btn-danger">Remover</button>
-                    </div>
-                `).join('') : '<p>Nenhuma glosa ativa</p>'}
-            `;
-        }
-
-        // Preencher select de tipos de glosa
-        const tipoSelect = document.getElementById('glosaTipo');
-        if (tipoSelect && tipos.tipos) {
-            tipoSelect.innerHTML = '<option value="">Selecione o tipo de pendência/glosa</option>';
-            tipos.tipos.forEach(tipo => {
-                const option = document.createElement('option');
-                option.value = tipo.descricao;
-                option.textContent = tipo.descricao;
-                tipoSelect.appendChild(option);
-            });
-        }
-
-        // Preencher select de profissionais
-        const profSelect = document.getElementById('glosaProfissional');
-        if (profSelect && profissionais.profissionais) {
-            profSelect.innerHTML = '<option value="">Selecione o profissional</option>';
-            profissionais.profissionais.forEach(prof => {
-                const option = document.createElement('option');
-                option.value = prof.nome;
-                option.textContent = `${prof.nome} (${prof.especialidade})`;
-                profSelect.appendChild(option);
-            });
-        }
-
-    } catch (err) {
-        console.error('Erro ao carregar glosas:', err);
-    }
-};
-
-// Event listener para formulário de pesquisa avançada
-document.addEventListener('DOMContentLoaded', () => {
-    const formPesquisa = document.getElementById('formPesquisa');
-    if (formPesquisa) {
-        formPesquisa.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Coletar filtros
-            const filtros = {};
-            
-            const numeroAIH = document.getElementById('pesquisaNumeroAIH').value.trim();
-            if (numeroAIH) filtros.numero_aih = numeroAIH;
-            
-            const numeroAtendimento = document.getElementById('pesquisaNumeroAtendimento').value.trim();
-            if (numeroAtendimento) filtros.numero_atendimento = numeroAtendimento;
-            
-            const dataInicio = document.getElementById('pesquisaDataInicio').value;
-            if (dataInicio) filtros.data_inicio = dataInicio;
-            
-            const dataFim = document.getElementById('pesquisaDataFim').value;
-            if (dataFim) filtros.data_fim = dataFim;
-            
-            const competencia = document.getElementById('pesquisaCompetencia').value.trim();
-            if (competencia) filtros.competencia = competencia;
-            
-            const valorMin = document.getElementById('pesquisaValorMin').value;
-            if (valorMin) filtros.valor_min = parseFloat(valorMin);
-            
-            const valorMax = document.getElementById('pesquisaValorMax').value;
-            if (valorMax) filtros.valor_max = parseFloat(valorMax);
-            
-            const profissional = document.getElementById('pesquisaProfissional').value;
-            if (profissional) filtros.profissional = profissional;
-            
-            // Status selecionados
-            const statusSelecionados = Array.from(document.querySelectorAll('input[name="status"]:checked'))
-                .map(cb => parseInt(cb.value));
-            if (statusSelecionados.length > 0) filtros.status = statusSelecionados;
-            
-            try {
-                const response = await api('/pesquisar', {
-                    method: 'POST',
-                    body: JSON.stringify({ filtros })
-                });
-                
-                if (response.resultados && response.resultados.length > 0) {
-                    exibirResultadosPesquisa(response.resultados, 'Resultados da Pesquisa Avançada');
-                } else {
-                    const container = document.getElementById('resultadosPesquisa');
-                    if (container) {
-                        container.innerHTML = '<p style="text-align: center; color: #64748b; padding: 2rem;">Nenhum resultado encontrado com os filtros aplicados</p>';
-                    }
-                    // **NOVO**: Limpar campos de busca rápida mesmo quando não há resultados
-                    limparCamposBuscaRapida();
-                }
-            } catch (err) {
-                alert('Erro ao realizar pesquisa: ' + err.message);
-                console.error('Erro na pesquisa avançada:', err);
-            }
-        });
-    }
-});
-
-// Função para limpar filtros (corrigindo erro do console)
-window.limparFiltros = () => {
-    // Limpar campos da pesquisa avançada
-    const campos = [
-        'pesquisaNumeroAIH', 'pesquisaNumeroAtendimento', 'pesquisaDataInicio', 
-        'pesquisaDataFim', 'pesquisaCompetencia', 'pesquisaValorMin', 
-        'pesquisaValorMax', 'pesquisaProfissional'
-    ];
-
-    campos.forEach(campoId => {
-        const campo = document.getElementById(campoId);
-        if (campo) campo.value = '';
-    });
-
-    // Desmarcar todos os checkboxes de status
-    document.querySelectorAll('input[name="status"]').forEach(cb => cb.checked = false);
-
-    // Limpar resultados
-    const container = document.getElementById('resultadosPesquisa');
-    if (container) {
-        container.innerHTML = '';
-    }
-
-    // **NOVO**: Limpar também campos de busca rápida
-    limparCamposBuscaRapida();
-
-    alert('Filtros limpos com sucesso!');
-};
-
-// Função para limpar filtros de relatórios
-window.limparFiltrosRelatorio = () => {
-    const campos = ['relatorioDataInicio', 'relatorioDataFim', 'relatorioCompetencia'];
-    campos.forEach(campoId => {
-        const campo = document.getElementById(campoId);
-        if (campo) campo.value = '';
-    });
-    alert('Filtros de relatórios limpos!');
-};
-
-// Função para limpar campos de busca rápida
-const limparCamposBuscaRapida = () => {
-    const campoAIH = document.getElementById('buscaRapidaAIH');
-    const campoAtendimento = document.getElementById('buscaRapidaAtendimento');
-    
-    if (campoAIH) {
-        campoAIH.value = '';
-    }
-    if (campoAtendimento) {
-        campoAtendimento.value = '';
-    }
-    
-    console.log('Campos de busca rápida limpos automaticamente');
-};
-
-// Função para limpar resultados
-window.limparResultados = () => {
-    const container = document.getElementById('resultadosPesquisa');
-    if (container) {
-        container.innerHTML = '';
-    }
-
-    // Limpar resultados armazenados
-    window.ultimosResultadosPesquisa = null;
-
-    // Também limpar os campos de busca rápida
-    limparCamposBuscaRapida();
-};
-
-// Variáveis globais para controle de exclusão
-let dadosExclusao = {
-    tipo: null, // 'movimentacao' ou 'aih'
-    dados: null,
-    justificativa: null
-};
-
-// Função para carregar logs de exclusão
-window.carregarLogsExclusao = async () => {
-    const container = document.getElementById('containerLogsExclusao');
-    const botao = document.querySelector('button[onclick="carregarLogsExclusao()"]');
-    
-    // Mostrar indicador de carregamento
-    const textoOriginal = botao.textContent;
-    botao.textContent = '🔄 Carregando...';
-    botao.disabled = true;
-    
-    container.innerHTML = `
-        <div style="text-align: center; padding: 2rem;">
-            <div style="border: 3px solid #f3f3f3; border-top: 3px solid #6366f1; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-            <p style="color: #64748b; margin: 0;">Carregando logs de exclusão...</p>
-        </div>
-    `;
-
-    try {
-        const response = await api('/relatorios/logs-exclusao', {
-            method: 'POST',
-            body: JSON.stringify({})
-        });
-
-        const logs = response.resultado || [];
-
-        if (logs.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: #64748b;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
-                    <h4 style="margin: 0 0 0.5rem 0;">Nenhum log de exclusão encontrado</h4>
-                    <p style="margin: 0;">Não há registros de exclusões no sistema.</p>
-                </div>
-            `;
-        } else {
-            // Ordenar logs por data (mais recente primeira)
-            logs.sort((a, b) => new Date(b.data_exclusao) - new Date(a.data_exclusao));
-
-            container.innerHTML = `
-                <!-- Cabeçalho da tabela -->
-                <div style="background: #e0e7ff; padding: 1rem; border-radius: 8px 8px 0 0; display: grid; grid-template-columns: 100px 120px 120px 150px 1fr 100px; gap: 1rem; align-items: center; font-weight: 600; color: #3730a3; font-size: 0.875rem;">
-                    <div>ID</div>
-                    <div>Tipo</div>
-                    <div>Usuário</div>
-                    <div>Data/Hora</div>
-                    <div>Justificativa</div>
-                    <div>AIH</div>
-                </div>
-
-                <!-- Linhas dos logs -->
-                <div style="max-height: 500px; overflow-y: auto; border: 1px solid #c7d2fe; border-top: none;">
-                    ${logs.map((log, index) => {
-                        const dataFormatada = new Date(log.data_exclusao).toLocaleString('pt-BR');
-                        const tipoIcon = log.tipo_exclusao === 'movimentacao' ? '📝' : '🗂️';
-                        const tipoTexto = log.tipo_exclusao === 'movimentacao' ? 'Movimentação' : 'AIH Completa';
-                        const corFundo = index % 2 === 0 ? '#ffffff' : '#f8fafc';
-                        
-                        return `
-                            <div style="background: ${corFundo}; padding: 1rem; display: grid; grid-template-columns: 100px 120px 120px 150px 1fr 100px; gap: 1rem; align-items: center; border-bottom: 1px solid #e2e8f0; font-size: 0.875rem;">
-                                <div style="font-weight: 600; color: #374151;">#${log.id}</div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem; color: ${log.tipo_exclusao === 'aih_completa' ? '#dc2626' : '#f59e0b'}; font-weight: 500;">
-                                    ${tipoIcon} ${tipoTexto}
-                                </div>
-                                <div style="color: #6366f1; font-weight: 500;">${log.usuario_nome || 'Sistema'}</div>
-                                <div style="color: #64748b; font-size: 0.8rem;">${dataFormatada}</div>
-                                <div style="color: #374151; line-height: 1.4; max-width: 300px; word-wrap: break-word;">${log.justificativa}</div>
-                                <div style="color: #059669; font-weight: 500; font-family: monospace;">${log.numero_aih_afetado || 'N/A'}</div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-
-                <!-- Rodapé com informações adicionais -->
-                <div style="background: #f8fafc; padding: 1rem; border-radius: 0 0 8px 8px; border: 1px solid #c7d2fe; border-top: none; font-size: 0.8rem; color: #64748b;">
-                    💡 <strong>Informações:</strong> 
-                    Os logs são mantidos permanentemente para auditoria. 
-                    Movimentações: exclusão de uma movimentação específica | 
-                    AIH Completa: exclusão de toda a AIH e dados relacionados.
-                </div>
-            `;
-        }
-
-    } catch (err) {
-        console.error('Erro ao carregar logs de exclusão:', err);
-        container.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #dc2626;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
-                <h4 style="margin: 0 0 0.5rem 0;">Erro ao carregar logs</h4>
-                <p style="margin: 0 0 1rem 0;">${err.message}</p>
-                <button onclick="carregarLogsExclusao()" 
-                        style="background: #6366f1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">
-                    🔄 Tentar Novamente
-                </button>
-            </div>
-        `;
-    } finally {
-        // Restaurar botão
-        botao.textContent = textoOriginal;
-        botao.disabled = false;
-    }
-};
-
-// Configurar funcionalidades de alteração da BD
-const configurarAlteracaoBD = () => {
-    // Limpar todos os campos ao acessar a tela
-    const camposParaLimpar = [
-        'aihMovimentacao', 'justificativaMovimentacao',
-        'aihCompleta', 'justificativaAIH'
-    ];
-    
-    camposParaLimpar.forEach(campoId => {
-        const campo = document.getElementById(campoId);
-        if (campo) {
-            campo.value = '';
-        }
-    });
-
-    // Limpar containers de informações
-    const containerMovimentacoes = document.getElementById('listaMovimentacoes');
-    if (containerMovimentacoes) {
-        containerMovimentacoes.innerHTML = '<p style="color: #64748b; text-align: center; margin: 0;">Informe o número da AIH para carregar as movimentações</p>';
-    }
-
-    const containerInfoAIH = document.getElementById('infoAIHDeletar');
-    if (containerInfoAIH) {
-        containerInfoAIH.innerHTML = '<p style="color: #64748b; text-align: center; margin: 0;">Informe o número da AIH para carregar as informações</p>';
-    }
-
-    // Limpar dados globais de exclusão
-    dadosExclusao = { tipo: null, dados: null, justificativa: null };
-
-    // Event listener para buscar movimentações
-    document.getElementById('aihMovimentacao').addEventListener('input', async (e) => {
-        const numeroAIH = e.target.value.trim();
-        if (numeroAIH.length >= 3) {
-            await carregarMovimentacoesAIH(numeroAIH);
-        } else {
-            document.getElementById('listaMovimentacoes').innerHTML = '<p style="color: #64748b; text-align: center; margin: 0;">Informe o número da AIH para carregar as movimentações</p>';
-        }
-    });
-
-    // Event listener para buscar informações da AIH
-    document.getElementById('aihCompleta').addEventListener('input', async (e) => {
-        const numeroAIH = e.target.value.trim();
-        if (numeroAIH.length >= 3) {
-            await carregarInformacoesAIH(numeroAIH);
-        } else {
-            document.getElementById('infoAIHDeletar').innerHTML = '<p style="color: #64748b; text-align: center; margin: 0;">Informe o número da AIH para carregar as informações</p>';
-        }
-    });
-
-    // Event listeners para os formulários
-    document.getElementById('formDeletarMovimentacao').addEventListener('submit', processarDeletarMovimentacao);
-    document.getElementById('formDeletarAIH').addEventListener('submit', processarDeletarAIH);
-
-    console.log('✅ Funcionalidades de alteração da BD configuradas e campos limpos');
-};
-
-// Carregar movimentações de uma AIH
-const carregarMovimentacoesAIH = async (numeroAIH) => {
-    try {
-        const aih = await api(`/aih/${numeroAIH}`);
-        const container = document.getElementById('listaMovimentacoes');
-
-        if (aih.movimentacoes && aih.movimentacoes.length > 0) {
-            container.innerHTML = `
-                <div style="margin-bottom: 1rem;">
-                    <strong style="color: #059669;">AIH ${aih.numero_aih} encontrada - ${aih.movimentacoes.length} movimentação(ões)</strong>
-                </div>
-                ${aih.movimentacoes.map((mov, index) => `
-                    <div style="border: 1px solid #d1d5db; border-radius: 6px; padding: 1rem; margin-bottom: 0.5rem; background: white;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <strong>${mov.tipo === 'entrada_sus' ? '📥 Entrada SUS' : '📤 Saída Hospital'}</strong>
-                                <br>
-                                <span style="color: #64748b;">Data: ${new Date(mov.data_movimentacao).toLocaleString('pt-BR')}</span>
-                                <br>
-                                <span style="color: #64748b;">Valor: R$ ${(mov.valor_conta || 0).toFixed(2)}</span>
-                            </div>
-                            <button type="button" onclick="selecionarMovimentacao(${mov.id}, '${aih.numero_aih}', '${mov.tipo}', '${mov.data_movimentacao}')" 
-                                    style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
-                                Selecionar
-                            </button>
-                        </div>
-                    </div>
-                `).join('')}
-            `;
-        } else {
-            container.innerHTML = '<p style="color: #f59e0b; text-align: center; margin: 0;">AIH encontrada, mas sem movimentações registradas</p>';
-        }
-    } catch (err) {
-        const container = document.getElementById('listaMovimentacoes');
-        if (err.message.includes('não encontrada')) {
-            container.innerHTML = '<p style="color: #dc2626; text-align: center; margin: 0;">AIH não encontrada</p>';
-        } else {
-            container.innerHTML = '<p style="color: #dc2626; text-align: center; margin: 0;">Erro ao carregar movimentações</p>';
-        }
-    }
-};
-
-// Carregar informações de uma AIH
-const carregarInformacoesAIH = async (numeroAIH) => {
-    try {
-        const aih = await api(`/aih/${numeroAIH}`);
-        const container = document.getElementById('infoAIHDeletar');
-
-        container.innerHTML = `
-            <div style="color: #059669; margin-bottom: 1rem;">
-                <strong>✅ AIH ${aih.numero_aih} encontrada</strong>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem;">
-                <div><strong>Status:</strong> ${getStatusDescricao(aih.status)}</div>
-                <div><strong>Competência:</strong> ${aih.competencia}</div>
-                <div><strong>Valor Inicial:</strong> R$ ${aih.valor_inicial.toFixed(2)}</div>
-                <div><strong>Valor Atual:</strong> R$ ${aih.valor_atual.toFixed(2)}</div>
-                <div><strong>Movimentações:</strong> ${aih.movimentacoes.length}</div>
-                <div><strong>Glosas Ativas:</strong> ${aih.glosas.length}</div>
-                <div><strong>Atendimentos:</strong> ${aih.atendimentos.length}</div>
-                <div><strong>Criada em:</strong> ${new Date(aih.criado_em).toLocaleDateString('pt-BR')}</div>
-            </div>
-            <div style="margin-top: 1rem; padding: 1rem; background: #fef2f2; border: 1px solid #dc2626; border-radius: 4px;">
-                <strong style="color: #dc2626;">⚠️ ATENÇÃO:</strong>
-                <span style="color: #dc2626;">Esta exclusão removerá PERMANENTEMENTE todos os dados relacionados: ${aih.movimentacoes.length} movimentação(ões), ${aih.glosas.length} glosa(s), ${aih.atendimentos.length} atendimento(s).</span>
-            </div>
-        `;
-    } catch (err) {
-        const container = document.getElementById('infoAIHDeletar');
-        if (err.message.includes('não encontrada')) {
-            container.innerHTML = '<p style="color: #dc2626; text-align: center; margin: 0;">AIH não encontrada</p>';
-        } else {
-            container.innerHTML = '<p style="color: #dc2626; text-align: center; margin: 0;">Erro ao carregar informações da AIH</p>';
-        }
-    }
-};
-
-// Selecionar movimentação para exclusão
-window.selecionarMovimentacao = (movId, numeroAIH, tipo, data) => {
-    dadosExclusao = {
-        tipo: 'movimentacao',
-        dados: { id: movId, numero_aih: numeroAIH, tipo, data },
-        justificativa: null
-    };
-
-    // Destacar movimentação selecionada
-    document.querySelectorAll('#listaMovimentacoes > div > div').forEach(div => {
-        div.style.border = '1px solid #d1d5db';
-        div.style.background = 'white';
-    });
-
-    event.target.closest('div').style.border = '2px solid #dc2626';
-    event.target.closest('div').style.background = '#fef2f2';
-    event.target.textContent = 'Selecionada ✓';
-    event.target.style.background = '#059669';
-};
-
-// Processar exclusão de movimentação
-const processarDeletarMovimentacao = async (e) => {
-    e.preventDefault();
-
-    if (!dadosExclusao.dados || dadosExclusao.tipo !== 'movimentacao') {
-        alert('Por favor, selecione uma movimentação para deletar');
-        return;
-    }
-
-    const justificativa = document.getElementById('justificativaMovimentacao').value.trim();
-    if (justificativa.length < 10) {
-        alert('A justificativa deve ter pelo menos 10 caracteres');
-        return;
-    }
-
-    dadosExclusao.justificativa = justificativa;
-
-    // Mostrar modal de confirmação
-    const modal = document.getElementById('modalConfirmacaoExclusao');
-    const detalhes = document.getElementById('detalhesExclusao');
-
-    detalhes.innerHTML = `
-        <h4 style="color: #dc2626; margin: 0 0 1rem 0;">Deletar Movimentação</h4>
-        <p><strong>AIH:</strong> ${dadosExclusao.dados.numero_aih}</p>
-        <p><strong>Tipo:</strong> ${dadosExclusao.dados.tipo === 'entrada_sus' ? 'Entrada SUS' : 'Saída Hospital'}</p>
-        <p><strong>Data:</strong> ${new Date(dadosExclusao.dados.data).toLocaleString('pt-BR')}</p>
-        <p><strong>Justificativa:</strong> ${justificativa}</p>
-    `;
-
-    document.getElementById('senhaConfirmacao').value = '';
-    modal.classList.add('ativo');
-};
-
-// Processar exclusão de AIH
-const processarDeletarAIH = async (e) => {
-    e.preventDefault();
-
-    const numeroAIH = document.getElementById('aihCompleta').value.trim();
-    const justificativa = document.getElementById('justificativaAIH').value.trim();
-
-    if (!numeroAIH) {
-        alert('Por favor, informe o número da AIH');
-        return;
-    }
-
-    if (justificativa.length < 10) {
-        alert('A justificativa deve ter pelo menos 10 caracteres');
-        return;
-    }
-
-    try {
-        const aih = await api(`/aih/${numeroAIH}`);
-        dadosExclusao = {
-            tipo: 'aih',
-            dados: { numero_aih: numeroAIH, ...aih },
-            justificativa: justificativa
-        };
-
-        // Mostrar modal de confirmação
-        const modal = document.getElementById('modalConfirmacaoExclusao');
-        const detalhes = document.getElementById('detalhesExclusao');
-
-        detalhes.innerHTML = `
-            <h4 style="color: #dc2626; margin: 0 0 1rem 0;">Deletar AIH Completa</h4>
-            <p><strong>AIH:</strong> ${aih.numero_aih}</p>
-            <p><strong>Competência:</strong> ${aih.competencia}</p>
-            <p><strong>Valor:</strong> R$ ${aih.valor_atual.toFixed(2)}</p>
-            <p><strong>Movimentações:</strong> ${aih.movimentacoes.length}</p>
-            <p><strong>Glosas:</strong> ${aih.glosas.length}</p>
-            <p><strong>Justificativa:</strong> ${justificativa}</p>
-            <div style="background: #7f1d1d; color: white; padding: 0.5rem; border-radius: 4px; margin-top: 1rem;">
-                <strong>⚠️ TODOS os dados relacionados serão PERMANENTEMENTE removidos!</strong>
-            </div>
-        `;
-
-        document.getElementById('senhaConfirmacao').value = '';
-        modal.classList.add('ativo');
-
-    } catch (err) {
-        alert('Erro ao buscar AIH: ' + err.message);
-    }
-};
-
-// Cancelar exclusão
-window.cancelarExclusao = () => {
-    document.getElementById('modalConfirmacaoExclusao').classList.remove('ativo');
-    dadosExclusao = { tipo: null, dados: null, justificativa: null };
-};
-
-// Confirmar exclusão
-window.confirmarExclusao = async () => {
-    const senha = document.getElementById('senhaConfirmacao').value;
-
-    if (!senha) {
-        alert('Por favor, digite sua senha para confirmar');
-        return;
-    }
-
-    if (!dadosExclusao.dados || !dadosExclusao.justificativa) {
-        alert('Dados de exclusão incompletos');
-        return;
-    }
-
-    try {
-        // Validar senha do usuário
-        await api('/validar-senha', {
-            method: 'POST',
-            body: JSON.stringify({ senha })
-        });
-
-        // Executar exclusão
-        if (dadosExclusao.tipo === 'movimentacao') {
-            await api(`/admin/deletar-movimentacao`, {
-                method: 'DELETE',
-                body: JSON.stringify({
-                    movimentacao_id: dadosExclusao.dados.id,
-                    justificativa: dadosExclusao.justificativa
-                })
-            });
-
-            alert('✅ Movimentação deletada com sucesso!');
-
-            // Limpar formulário de movimentação
-            document.getElementById('formDeletarMovimentacao').reset();
-            document.getElementById('listaMovimentacoes').innerHTML = '<p style="color: #64748b; text-align: center; margin: 0;">Informe o número da AIH para carregar as movimentações</p>';
-
-        } else if (dadosExclusao.tipo === 'aih') {
-            await api(`/admin/deletar-aih`, {
-                method: 'DELETE',
-                body: JSON.stringify({
-                    numero_aih: dadosExclusao.dados.numero_aih,
-                    justificativa: dadosExclusao.justificativa
-                })
-            });
-
-            alert('✅ AIH deletada com sucesso!');
-
-            // Limpar formulário de AIH
-            document.getElementById('formDeletarAIH').reset();
-            document.getElementById('infoAIHDeletar').innerHTML = '<p style="color: #64748b; text-align: center; margin: 0;">Informe o número da AIH para carregar as informações</p>';
-        }
-
-        // Fechar modal e limpar dados
-        document.getElementById('modalConfirmacaoExclusao').classList.remove('ativo');
-        dadosExclusao = { tipo: null, dados: null, justificativa: null };
-
-        // Limpar campos específicos adicionais (garantir limpeza completa)
-        const camposParaLimpar = [
-            'aihMovimentacao', 'justificativaMovimentacao',
-            'aihCompleta', 'justificativaAIH'
-        ];
-        
-        camposParaLimpar.forEach(campoId => {
-            const campo = document.getElementById(campoId);
-            if (campo) {
-                campo.value = '';
-            }
-        });
-
-        // Carregar logs de exclusão automaticamente após exclusão bem-sucedida
-        console.log('🔄 Carregando logs de exclusão automaticamente após exclusão...');
-        setTimeout(() => {
-            carregarLogsExclusao();
-        }, 500); // Pequeno delay para garantir que a exclusão foi processada
-
-    } catch (err) {
-        alert('❌ Erro na exclusão: ' + err.message);
-    }
-};
-
-// Funções de backup e exportação melhoradas
-window.fazerBackup = async () => {
-    try {
-        console.log('🔄 Iniciando backup do banco de dados...');
-        
-        // Verificar se há token válido
-        if (!state.token) {
+        // Verificar se há token válido        if (!state.token) {
             console.error('❌ Token não encontrado no state:', state);
             alert('❌ Erro: Usuário não autenticado. Faça login novamente.');
             return;
@@ -3685,13 +1434,13 @@ window.fazerBackup = async () => {
                 <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 1rem;">Isso pode levar alguns segundos...</p>
             </div>
         `;
-        
+
         // Adicionar ao DOM
         document.body.appendChild(loadingModal);
 
         // Fazer requisição para backup
         console.log('📡 Fazendo requisição para /api/backup...');
-        
+
         const response = await fetch('/api/backup', {
             method: 'GET',
             headers: {
@@ -3730,33 +1479,33 @@ window.fazerBackup = async () => {
         // Criar blob e fazer download
         console.log('💾 Criando blob para download...');
         const blob = await response.blob();
-        
+
         if (blob.size === 0) {
             throw new Error('Arquivo de backup está vazio');
         }
-        
+
         console.log(`💾 Blob criado com tamanho: ${blob.size} bytes`);
 
         // Criar link de download
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        
+
         // Definir nome do arquivo
         const dataAtual = new Date().toISOString().split('T')[0];
         link.download = `backup-aih-${dataAtual}.db`;
-        
+
         // Configurar link invisível
         link.style.display = 'none';
         link.style.visibility = 'hidden';
 
         // Adicionar ao DOM temporariamente
         document.body.appendChild(link);
-        
+
         // Forçar clique
         console.log('🖱️ Iniciando download...');
         link.click();
-        
+
         // Limpar recursos
         setTimeout(() => {
             if (document.body.contains(link)) {
@@ -3772,7 +1521,7 @@ window.fazerBackup = async () => {
         if (document.body.contains(loadingModal)) {
             document.body.removeChild(loadingModal);
         }
-        
+
         // Mostrar mensagem de sucesso
         alert('✅ Backup do banco de dados realizado com sucesso!\n\nO arquivo SQLite foi baixado e contém todos os dados do sistema.');
 
@@ -3784,13 +1533,13 @@ window.fazerBackup = async () => {
             url: window.location.href,
             userAgent: navigator.userAgent
         });
-        
+
         // Remover modal de loading se existir
         const loadingModal = document.getElementById('backup-loading-modal');
         if (loadingModal && document.body.contains(loadingModal)) {
             document.body.removeChild(loadingModal);
         }
-        
+
         // Mostrar erro detalhado
         alert(`❌ Erro ao fazer backup: ${err.message}\n\nDetalhes técnicos foram registrados no console.`);
     }
@@ -3879,10 +1628,10 @@ window.gerenciarGlosasFromInfo = () => {
         alert('Nenhuma AIH selecionada');
         return;
     }
-    
+
     // Definir tela anterior como a tela de informações da AIH
     state.telaAnterior = 'telaInfoAIH';
-    
+
     // Ir para tela de pendências
     mostrarTela('telaPendencias');
     carregarGlosas();
@@ -4544,5 +2293,113 @@ document.getElementById('btnSalvarGlosas')?.addEventListener('click', async () =
     } else {
         // Caso contrário, usar função padrão
         voltarTelaAnterior();
+    }
+});
+
+// Adicionar funcionalidade de clique nos cards de status e integração com o seletor
+window.selecionarStatusCard = (status) => {
+    // Alterar valor do seletor
+    const seletor = document.getElementById('movStatus');
+    if (seletor) {
+        seletor.value = status;
+    }
+
+    // Remover classe de todos os cards
+    document.querySelectorAll('.status-card').forEach(card => {
+        card.classList.remove('selecionado');
+    });
+
+    // Adicionar classe ao card selecionado
+    const card = document.querySelector(`.status-card[data-status="${status}"]`);
+    if (card) {
+        card.classList.add('selecionado');
+    }
+};
+
+// Event listener para o seletor de status
+document.getElementById('movStatus').addEventListener('change', (e) => {
+    const status = e.target.value;
+
+    // Remover classe de todos os cards
+    document.querySelectorAll('.status-card').forEach(card => {
+        card.classList.remove('selecionado');
+    });
+
+    // Adicionar classe ao card correspondente
+    const card = document.querySelector(`.status-card[data-status="${status}"]`);
+    if (card) {
+        card.classList.add('selecionado');
+    }
+});
+
+// Adicionar funcionalidade para solicitar confirmação de valor
+const valorAnterior = null; // Manter valor anterior em cache
+
+document.getElementById('movValor').addEventListener('focusout', async (e) => {
+    const valorAtual = parseFloat(e.target.value);
+
+    if (valorAnterior !== null && valorAtual === valorAnterior) {
+        const confirmar = await mostrarModal(
+            'Confirmar Valor',
+            `O valor atual (R$ ${valorAtual.toFixed(2)}) é o mesmo que o anterior. Tem certeza que deseja mantê-lo?`
+        );
+
+        if (!confirmar) {
+            e.target.value = ''; // Limpar campo se o usuário não confirmar
+        }
+    }
+    // Atualizar valor anterior
+    valorAnterior = valorAtual;
+});
+
+// Executar ao carregar
+document.addEventListener('DOMContentLoaded', () => {
+    // Lembrete sobre os status com design melhorado
+    const lembreteStatus = document.getElementById('lembreteStatus');
+
+    if (lembreteStatus) {
+        lembreteStatus.innerHTML = `
+            <!-- Lembrete sobre os status com design melhorado -->
+            <div class="status-guia-completo">
+                <h4>📋 Guia Completo dos Status de AIH</h4>
+                <div class="status-grid-detalhado">
+                    <div class="status-card status-1-card clickable" data-status="1" onclick="selecionarStatusCard('1')">
+                        <div class="status-header">
+                            <span class="status-numero">1</span>
+                            <h5>✅ Finalizada - Aprovação Direta</h5>
+                        </div>
+                        <p><strong>Significado:</strong> Auditoria do SUS aprovou diretamente a conta sem glosas ou pendências.</p>
+                        <p><strong>Ação:</strong> Processo concluído com sucesso. Concordância entre auditorias.</p>
+                    </div>
+
+                    <div class="status-card status-2-card clickable" data-status="2" onclick="selecionarStatusCard('2')">
+                        <div class="status-header">
+                            <span class="status-numero">2</span>
+                            <h5>🔄 Ativa - Aprovação Indireta</h5>
+                        </div>
+                        <p><strong>Significado:</strong> Auditoria SUS aprovou, porém com pendências e/ou glosas. Cabe recurso a ser apresentado pela Auditoria do Hospital.</p>
+                        <p><strong>Ação:</strong> Conta ja auditada pela Auditoria do SUS, porém com status de ativa por possibilidade de retorno com recurso solicitado pela auditoria do hospital.</p>
+                    </div>
+
+                    <div class="status-card status-3-card clickable" data-status="3" onclick="selecionarStatusCard('3')">
+                        <div class="status-header">
+                            <span class="status-numero">3</span>
+                            <h5>⚠️ Ativa - Em Discussão</h5>
+                        </div>
+                        <p><strong>Significado:</strong> Há divergências entre auditorias que precisam ser resolvidas antes da aprovação desta conta.</p>
+                        <p><strong>Ação:</strong> Resolução de pendências e glosas em andamento entre as Auditorias.</p>
+                    </div>
+
+                    <div class="status-card status-4-card clickable" data-status="4" onclick="selecionarStatusCard('4')">
+                        <div class="status-header">
+                            <span class="status-numero">4</span>
+                            <h5>✅ Finalizada - Após Discussão</h5>
+                        </div>
+                        <p><strong>Significado:</strong> Discussões concluídas entre ambas auditorias. AIH finalizada.</p>
+                        <p><strong>Ação:</strong> Processo concluído após concordância entre as auditorias.</p>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 });

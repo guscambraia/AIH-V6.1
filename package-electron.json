@@ -1,0 +1,84 @@
+
+{
+  "name": "sistema-aih-desktop",
+  "version": "2.0.0",
+  "description": "Sistema de Controle de Auditoria de AIH - Versão Desktop",
+  "main": "main.js",
+  "homepage": "./",
+  "author": "Sistema AIH",
+  "license": "MIT",
+  "scripts": {
+    "electron": "electron .",
+    "electron-dev": "electron . --dev",
+    "build-win": "electron-builder --win",
+    "build-all": "electron-builder --win --x64 --ia32",
+    "dist": "npm run build-all"
+  },
+  "build": {
+    "appId": "com.sistema.aih",
+    "productName": "Sistema AIH",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!tests/**/*",
+      "!attached_assets/**/*",
+      "!dist/**/*",
+      "!.vscode/**/*",
+      "!*.md",
+      "!*.bat"
+    ],
+    "extraResources": [
+      {
+        "from": "node_modules",
+        "to": "node_modules",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64", "ia32"]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "allowElevation": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "portable": {
+      "artifactName": "SistemaAIH-Portable-${version}-${arch}.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^26.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.8.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^6.10.0",
+    "fs-extra": "^11.1.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^2.7.0",
+    "sqlite3": "^5.1.7",
+    "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^4.7.1",
+    "xlsx": "^0.18.5"
+  }
+}

@@ -2,13 +2,33 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-// Garantir que a pasta db existe
-const dbDir = path.join(__dirname, 'db');
+// Configuração de banco baseada em variáveis de ambiente
+const isElectronMode = process.env.ELECTRON_MODE === 'true';
+const dbType = process.env.DB_TYPE || 'local';
+
+let dbPath;
+let isRemoteDatabase = false;
+
+if (dbType === 'remote') {
+    // Configuração para banco remoto (PostgreSQL, MySQL, etc.)
+    isRemoteDatabase = true;
+    console.log('🌐 Modo banco remoto configurado');
+    // TODO: Implementar suporte a banco remoto quando necessário
+    console.log('⚠️ Suporte a banco remoto será implementado conforme necessidade');
+    // Por enquanto, usar local como fallback
+    dbPath = process.env.DB_PATH || path.join(__dirname, 'db', 'aih.db');
+} else {
+    // Configuração para banco local
+    dbPath = process.env.DB_PATH || path.join(__dirname, 'db', 'aih.db');
+}
+
+// Garantir que a pasta db existe para banco local
+const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const dbPath = path.join(__dirname, 'db', 'aih.db');
+console.log(`📊 Banco de dados: ${isRemoteDatabase ? 'Remoto' : 'Local'} - ${dbPath}`);
 
 // Pool de conexões para alta concorrência
 class DatabasePool {

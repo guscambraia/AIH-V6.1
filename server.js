@@ -298,6 +298,17 @@ process.on('unhandledRejection', (reason, promise) => {
     console.log('🔍 Promise:', promise);
 });
 
+// Verificar se está rodando em modo Electron
+const isElectronMode = process.env.ELECTRON_MODE === 'true';
+
+if (isElectronMode) {
+    console.log('🖥️ Executando em modo Electron');
+    // Não abrir navegador automaticamente
+    console.log('⚡ Servidor iniciado para Electron');
+} else {
+    console.log('🌐 Executando em modo Web');
+}
+
 // Inicializar sistema
 initializeSystem();
 
